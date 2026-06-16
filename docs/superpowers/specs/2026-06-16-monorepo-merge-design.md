@@ -86,6 +86,29 @@ https://jacobcrigby.github.io/web_toys/marblegame/
 - `pdf-to-cbz/vite.config.ts` — update `base`
 - `marblegame/vite.config.ts` — update `base`
 
+## jacobcrigby.github.io Updates
+
+`/home/jacob/Projects/jacobcrigby.github.io/index.html` currently links directly to the three old project paths. After the merge it must:
+
+1. Update all three existing card `href`s to the new `web_toys` sub-paths:
+   - `https://jacobcrigby.github.io/ultimate-tic-tac-toe/` → `https://jacobcrigby.github.io/web_toys/ultimate-tic-tac-toe/`
+   - `https://jacobcrigby.github.io/marblegame/` → `https://jacobcrigby.github.io/web_toys/marblegame/`
+   - `https://jacobcrigby.github.io/pdf-to-cbz/` → `https://jacobcrigby.github.io/web_toys/pdf-to-cbz/`
+2. Add a fourth card for **Microcosm** pointing to `https://jacobcrigby.github.io/web_toys/microcosm/`
+
+No structural or styling changes — the existing Material You design is kept as-is.
+
+## web_toys Landing Page
+
+`web_toys/index.html` — plain HTML, no build step. Should match the Material You card style of `jacobcrigby.github.io/index.html` (same CSS variables, card layout, open pill). Lists all four toys with their names, one-line descriptions, and links to their sub-paths under `/web_toys/`.
+
+## Relicensing
+
+All content in the `web_toys` repo (including everything copied from the source projects) is licensed Apache 2.0. Required changes when copying each project:
+
+- Replace or add `LICENSE` file in each project directory with Apache 2.0 text (the `web_toys` root already has it)
+- Update `license` field in each project's `package.json` to `"Apache-2.0"` (currently `pdf-to-cbz` says AGPL-3.0)
+
 ## Verification
 
 1. Run each sub-project's build locally (`npm ci && npm run build`) and confirm the output is under `dist/`
