@@ -1,0 +1,8 @@
+{
+  "name": "web_toys",
+  "private": true,
+  "scripts": {
+    "install:all": "pnpm install",
+    "build:all": "pnpm --filter '*' run build"
+  }
+}
