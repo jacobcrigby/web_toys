@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MICROCOSM — a small pond of evolving minds</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --abyss:      #04090e;
+    --water:      #071219;
+    --hairline:   #16323b;
+    --hairline-2: #0c2229;
+    --ink:        #b8d4d6;
+    --ink-dim:    #5d7f84;
+    --amber:      #ffb454;
+    --amber-dim:  #8f6a3a;
+    --alive:      #8fe3a8;
+    --danger:     #ff7d6b;
+    --mono: "IBM Plex Mono", ui-monospace, monospace;
+    --disp: "Fraunces", Georgia, serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body { height: 100%; }
+
+  body {
+    background: var(--abyss);
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 13px;
+    overflow: hidden;
+    cursor: crosshair;
+  }
+
+  /* film grain over everything */
+  body::after {
+    content: "";
+    position: fixed; inset: 0;
+    pointer-events: none;
+    opacity: 0.05;
+    z-index: 50;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  #app {
+    display: grid;
+    grid-template-columns: 1fr 336px;
+    grid-template-rows: auto 1fr;
+    grid-template-areas: "head head" "dish panel";
+    height: 100vh;
+  }
+
+  /* ---------- header ---------- */
+  header {
+    grid-area: head;
+    display: flex;
+    align-items: baseline;
+    gap: 18px;
+    padding: 14px 22px 12px;
+    border-bottom: 1px solid var(--hairline-2);
+  }
+  header h1 {
+    font-family: var(--disp);
+    font-weight: 350;
+    font-style: italic;
+    font-size: 27px;
+    letter-spacing: 0.16em;
+    color: #e8f2f0;
+  }
+  header h1 .o { color: var(--amber); }
+  header .tagline {
+    color: var(--ink-dim);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+  }
+  header .clock {
+    margin-left: auto;
+    color: var(--amber);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+  }
+
+  /* ---------- dish ---------- */
+  #dishWrap { grid-area: dish; position: relative; }
+  #dish { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+  #extinct {
+    position: absolute; inset: 0;
+    display: none;
+    align-items: center; justify-content: center;
+    flex-direction: column; gap: 10px;
+    background: rgba(4, 9, 14, 0.72);
+    text-align: center;
+  }
+  #extinct.show { display: flex; }
+  #extinct .big {
+    font-family: var(--disp); font-style: italic; font-weight: 300;
+    font-size: 30px; color: #e8f2f0; letter-spacing: 0.08em;
+  }
+  #extinct .small { color: var(--ink-dim); font-size: 12px; }
+
+  .hint {
+    position: absolute; left: 18px; bottom: 14px;
+    color: var(--ink-dim); font-size: 11px; letter-spacing: 0.05em;
+    pointer-events: none;
+    transition: opacity 2s;
+  }
+
+  /* ---------- panel ---------- */
+  #panel {
+    grid-area: panel;
+    border-left: 1px solid var(--hairline-2);
+    background: linear-gradient(180deg, #060f15 0%, #04090e 100%);
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--hairline) transparent;
+  }
+
+  section { padding: 14px 18px; border-bottom: 1px solid var(--hairline-2); }
+
+  h2 {
+    font-size: 10px; font-weight: 500;
+    letter-spacing: 0.28em;
+    color: var(--amber-dim);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+  }
+  h2::before { content: "— "; color: var(--hairline); }
+
+  /* readout grid */
+  .readout {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px 8px;
+  }
+  .readout .cell .v {
+    font-size: 19px; font-weight: 600; color: #e8f2f0;
+    font-variant-numeric: tabular-nums;
+  }
+  .readout .cell .k {
+    font-size: 9px; letter-spacing: 0.14em; color: var(--ink-dim);
+    text-transform: uppercase; margin-top: 1px;
+  }
+  .readout .cell .v.amber { color: var(--amber); }
+  .readout .cell .v.green { color: var(--alive); }
+
+  /* charts */
+  .chartBlock { margin-bottom: 8px; }
+  .chartBlock:last-child { margin-bottom: 0; }
+  .chartBlock .lbl {
+    display: flex; justify-content: space-between;
+    font-size: 9px; letter-spacing: 0.14em; color: var(--ink-dim);
+    text-transform: uppercase; margin-bottom: 4px;
+  }
+  .chartBlock canvas {
+    width: 100%; height: 44px; display: block;
+    border: 1px solid var(--hairline-2);
+    background: rgba(0,0,0,0.25);
+  }
+
+  /* controls */
+  .btnRow { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+  button {
+    font-family: var(--mono);
+    font-size: 10px; letter-spacing: 0.1em;
+    color: var(--ink);
+    background: transparent;
+    border: 1px solid var(--hairline);
+    padding: 6px 9px;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: border-color .15s, color .15s, box-shadow .15s;
+  }
+  button:hover {
+    border-color: var(--amber-dim);
+    color: var(--amber);
+    box-shadow: 0 0 12px rgba(255, 180, 84, 0.12);
+  }
+  button.active { border-color: var(--amber); color: var(--amber); }
+
+  .slider { margin-bottom: 10px; }
+  .slider label {
+    display: flex; justify-content: space-between;
+    font-size: 9px; letter-spacing: 0.14em; color: var(--ink-dim);
+    text-transform: uppercase; margin-bottom: 5px;
+  }
+  .slider label .val { color: var(--amber); }
+  input[type=range] {
+    width: 100%; height: 2px;
+    -webkit-appearance: none; appearance: none;
+    background: var(--hairline);
+    outline: none;
+    cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 11px; height: 11px;
+    background: var(--abyss);
+    border: 1px solid var(--amber);
+    border-radius: 50%;
+  }
+  input[type=range]::-moz-range-thumb {
+    width: 9px; height: 9px;
+    background: var(--abyss);
+    border: 1px solid var(--amber);
+    border-radius: 50%;
+  }
+
+  /* specimen inspector */
+  #specEmpty { color: var(--ink-dim); font-size: 11px; font-style: italic; font-family: var(--disp); letter-spacing: .03em; }
+  #specBody { display: none; }
+  #specBody.show { display: block; }
+  .specHead { display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px; }
+  .specHead .name {
+    font-family: var(--disp); font-style: italic;
+    font-size: 17px; color: #e8f2f0;
+  }
+  .specHead .gen { font-size: 10px; color: var(--amber); letter-spacing: .1em; }
+  .specHead .dead { font-size: 10px; color: var(--danger); letter-spacing: .1em; }
+
+  .traits { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 14px; margin-bottom: 10px; }
+  .trait .tk {
+    display: flex; justify-content: space-between;
+    font-size: 9px; letter-spacing: 0.1em; color: var(--ink-dim);
+    text-transform: uppercase; margin-bottom: 2px;
+  }
+  .trait .bar { height: 3px; background: var(--hairline-2); position: relative; }
+  .trait .bar i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--amber); transition: width .2s; }
+
+  #brainCanvas {
+    width: 100%; height: 132px; display: block;
+    border: 1px solid var(--hairline-2);
+    background: rgba(0,0,0,0.25);
+  }
+  .brainLbl { font-size: 9px; letter-spacing: 0.14em; color: var(--ink-dim); text-transform: uppercase; margin: 8px 0 4px; }
+
+  /* log */
+  #log { list-style: none; }
+  #log li {
+    font-size: 10px; color: var(--ink-dim);
+    padding: 2px 0; letter-spacing: 0.02em;
+    border-bottom: 1px dashed var(--hairline-2);
+  }
+  #log li:first-child { color: var(--ink); }
+  #log li .t { color: var(--amber-dim); margin-right: 7px; }
+
+  footer { padding: 12px 18px; font-size: 9px; color: var(--ink-dim); letter-spacing: 0.06em; line-height: 1.6; }
+  footer em { color: var(--amber-dim); font-style: normal; }
+
+  @media (max-width: 760px) {
+    #app { grid-template-columns: 1fr; grid-template-rows: auto 55vh 1fr; grid-template-areas: "head" "dish" "panel"; }
+    #panel { border-left: none; border-top: 1px solid var(--hairline-2); }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>MICR<span class="o">O</span>COSM</h1>
+    <div class="tagline">a small pond of evolving minds · nothing in here is scripted</div>
+    <div class="clock" id="clock">t 0s · gen 0</div>
+  </header>
+
+  <div id="dishWrap">
+    <canvas id="dish"></canvas>
+    <div id="extinct">
+      <div class="big">the dish fell silent.</div>
+      <div class="small">reseeding life from the sediment…</div>
+    </div>
+    <div class="hint" id="hint">click water to drop food · click a mote to read its mind</div>
+  </div>
+
+  <div id="panel">
+    <section>
+      <h2>Readout</h2>
+      <div class="readout">
+        <div class="cell"><div class="v green" id="rPop">0</div><div class="k">alive</div></div>
+        <div class="cell"><div class="v" id="rFood">0</div><div class="k">food</div></div>
+        <div class="cell"><div class="v amber" id="rGen">0</div><div class="k">max gen</div></div>
+        <div class="cell"><div class="v" id="rBirths">0</div><div class="k">births</div></div>
+        <div class="cell"><div class="v" id="rDeaths">0</div><div class="k">deaths</div></div>
+        <div class="cell"><div class="v" id="rEaten">0</div><div class="k">predations</div></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Drift</h2>
+      <div class="chartBlock">
+        <div class="lbl"><span>population</span><span id="popNow"></span></div>
+        <canvas id="chartPop"></canvas>
+      </div>
+      <div class="chartBlock">
+        <div class="lbl"><span>mean diet · plant ↔ flesh</span><span id="dietNow"></span></div>
+        <canvas id="chartDiet"></canvas>
+      </div>
+      <div class="chartBlock">
+        <div class="lbl"><span>mean sense radius</span><span id="senseNow"></span></div>
+        <canvas id="chartSense"></canvas>
+      </div>
+    </section>
+
+    <section>
+      <h2>Instruments</h2>
+      <div class="btnRow">
+        <button id="bPause">⏸ pause</button>
+        <button id="bSpeed">1× speed</button>
+        <button id="bFeast">✺ feast</button>
+        <button id="bDoom">☄ cataclysm</button>
+        <button id="bReseed">⟲ reseed</button>
+      </div>
+      <div class="slider">
+        <label><span>mutation intensity</span><span class="val" id="vMut">0.35</span></label>
+        <input type="range" id="sMut" min="0" max="1" step="0.01" value="0.35">
+      </div>
+      <div class="slider">
+        <label><span>food abundance</span><span class="val" id="vFood">1.0</span></label>
+        <input type="range" id="sFood" min="0.1" max="2.5" step="0.05" value="1.0">
+      </div>
+    </section>
+
+    <section>
+      <h2>Specimen</h2>
+      <div id="specEmpty">nothing under the lens — click a mote in the dish.</div>
+      <div id="specBody">
+        <div class="specHead">
+          <span class="name" id="spName">—</span>
+          <span class="gen" id="spGen"></span>
+          <span class="dead" id="spDead"></span>
+        </div>
+        <div class="traits">
+          <div class="trait"><div class="tk"><span>energy</span><span id="tvEnergy"></span></div><div class="bar"><i id="tbEnergy"></i></div></div>
+          <div class="trait"><div class="tk"><span>age</span><span id="tvAge"></span></div><div class="bar"><i id="tbAge"></i></div></div>
+          <div class="trait"><div class="tk"><span>size</span><span id="tvSize"></span></div><div class="bar"><i id="tbSize"></i></div></div>
+          <div class="trait"><div class="tk"><span>speed</span><span id="tvSpeed"></span></div><div class="bar"><i id="tbSpeed"></i></div></div>
+          <div class="trait"><div class="tk"><span>sense</span><span id="tvSense"></span></div><div class="bar"><i id="tbSense"></i></div></div>
+          <div class="trait"><div class="tk"><span>diet</span><span id="tvDiet"></span></div><div class="bar"><i id="tbDiet"></i></div></div>
+        </div>
+        <div class="brainLbl">inherited brain · live activations</div>
+        <canvas id="brainCanvas"></canvas>
+      </div>
+    </section>
+
+    <section>
+      <h2>Field log</h2>
+      <ul id="log"></ul>
+    </section>
+
+    <footer>
+      Every mote steers by a 9–8–2 neural net it inherited, mutated, from its parent.
+      Plants feed herbivores; the <em>diet</em> gene lets carnivory evolve on its own.
+      Whatever survives, survives. <em>One self-contained file. No libraries.</em>
+    </footer>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+/* ============================================================
+   CONFIG
+   ============================================================ */
+const CFG = {
+  initPop: 70,
+  initFood: 320,
+  maxPop: 400,
+  maxFood: 900,
+  foodEnergy: 16,
+  foodBaseRate: 11,        // pellets / sec at abundance 1.0
+  startEnergy: 55,
+  maxEnergy: 160,
+  birthAt: 112,            // energy needed to divide
+  childEnergy: 48,
+  birthCost: 62,
+  minBirthAge: 5,
+  eyeAngles: [-0.8, 0, 0.8],
+  eyeCone: 0.85,           // half-angle of each eye, radians
+  gridCell: 48,
+  patchCount: 3,
+  patchSigma: 72,
+};
+
+/* ============================================================
+   UTILS
+   ============================================================ */
+const TAU = Math.PI * 2;
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const lerp = (a, b, t) => a + (b - a) * t;
+const rand = (a = 1, b) => b === undefined ? Math.random() * a : a + Math.random() * (b - a);
+function randn() { // Box–Muller
+  let u = 0, v = 0;
+  while (u === 0) u = Math.random();
+  while (v === 0) v = Math.random();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(TAU * v);
+}
+// shortest wrapped delta on a torus of length L
+const wrapD = (d, L) => { d %= L; if (d > L / 2) d -= L; if (d < -L / 2) d += L; return d; };
+const wrapP = (p, L) => { p %= L; return p < 0 ? p + L : p; };
+const angDiff = (a, b) => { let d = (b - a) % TAU; if (d > Math.PI) d -= TAU; if (d < -Math.PI) d += TAU; return d; };
+
+const SYL = ["va", "lo", "mi", "ke", "ra", "su", "ne", "ta", "ori", "pli", "um", "esh", "ny", "ze", "gru", "fa"];
+const makeName = () => {
+  let n = "";
+  const k = 2 + (Math.random() * 2 | 0);
+  for (let i = 0; i < k; i++) n += SYL[Math.random() * SYL.length | 0];
+  return n[0].toUpperCase() + n.slice(1);
+};
+
+/* ============================================================
+   GENOME — body traits + brain weights
+   brain: 9 inputs -> 8 hidden (tanh) -> 2 outputs (turn, thrust)
+   inputs: foodL foodC foodR  creL creC creR  energy speed bias
+   ============================================================ */
+const NIN = 9, NHID = 8, NOUT = 2;
+const NW = NIN * NHID + NHID + NHID * NOUT + NOUT; // 98
+
+function randomGenome() {
+  const w = new Float32Array(NW);
+  for (let i = 0; i < NW; i++) w[i] = randn() * 0.6;
+  return {
+    hue: rand(360),
+    size: rand(0.2, 0.8),   // 0..1 -> radius
+    speed: rand(0.2, 0.8),  // 0..1 -> max thrust speed
+    sense: rand(0.2, 0.8),  // 0..1 -> sense radius
+    diet: rand(0, 0.25),    // 0 plant-eater .. 1 flesh-eater (starts herbivorous)
+    w,
+  };
+}
+
+function mutateGenome(g, rate) {
+  const w = Float32Array.from(g.w);
+  const p = 0.10 + 0.22 * rate;          // per-weight mutation probability
+  const s = 0.35 * (0.4 + rate);         // mutation step scale
+  for (let i = 0; i < NW; i++) if (Math.random() < p) w[i] += randn() * s;
+  const t = (v) => clamp(v + randn() * 0.07 * (0.4 + rate), 0.02, 1);
+  return {
+    hue: wrapP(g.hue + randn() * 9 * (0.4 + rate), 360),
+    size: t(g.size),
+    speed: t(g.speed),
+    sense: t(g.sense),
+    diet: t(g.diet),
+    w,
+  };
+}
+
+/* ============================================================
+   SPATIAL HASH (toroidal)
+   ============================================================ */
+class Grid {
+  constructor(w, h, cell) {
+    this.cell = cell;
+    this.cols = Math.max(1, Math.ceil(w / cell));
+    this.rows = Math.max(1, Math.ceil(h / cell));
+    this.buckets = new Array(this.cols * this.rows);
+    for (let i = 0; i < this.buckets.length; i++) this.buckets[i] = [];
+  }
+  clear() { for (const b of this.buckets) b.length = 0; }
+  idx(x, y) {
+    const cx = ((Math.floor(x / this.cell)) % this.cols + this.cols) % this.cols;
+    const cy = ((Math.floor(y / this.cell)) % this.rows + this.rows) % this.rows;
+    return cy * this.cols + cx;
+  }
+  add(item) { this.buckets[this.idx(item.x, item.y)].push(item); }
+  /* visit all items within radius r of (x,y), wrapped */
+  each(x, y, r, fn) {
+    const cr = Math.ceil(r / this.cell);
+    const cx0 = Math.floor(x / this.cell), cy0 = Math.floor(y / this.cell);
+    for (let dy = -cr; dy <= cr; dy++) {
+      const cy = ((cy0 + dy) % this.rows + this.rows) % this.rows;
+      for (let dx = -cr; dx <= cr; dx++) {
+        const cx = ((cx0 + dx) % this.cols + this.cols) % this.cols;
+        const b = this.buckets[cy * this.cols + cx];
+        for (let i = 0; i < b.length; i++) fn(b[i]);
+      }
+    }
+  }
+}
+
+/* ============================================================
+   CREATURE
+   ============================================================ */
+let nextId = 1;
+class Creature {
+  constructor(genome, x, y, energy, gen) {
+    this.id = nextId++;
+    this.name = makeName();
+    this.g = genome;
+    this.x = x; this.y = y;
+    this.heading = rand(TAU);
+    this.vx = 0; this.vy = 0;
+    this.energy = energy;
+    this.gen = gen;
+    this.age = 0;
+    this.children = 0;
+    this.lifespan = 95 + rand(50);
+    this.dead = false;
+    this.phase = rand(TAU);      // tail wiggle
+    // derived body
+    this.r = lerp(3.0, 8.0, genome.size);
+    this.maxSpeed = lerp(55, 150, genome.speed) * lerp(1.2, 0.72, genome.size);
+    this.senseR = lerp(34, 105, genome.sense);
+    // brain scratch buffers (kept for inspector)
+    this.inp = new Float32Array(NIN);
+    this.hid = new Float32Array(NHID);
+    this.out = new Float32Array(NOUT);
+  }
+
+  brain() {
+    const w = this.g.w, inp = this.inp, hid = this.hid, out = this.out;
+    let k = 0;
+    for (let h = 0; h < NHID; h++) {
+      let s = 0;
+      for (let i = 0; i < NIN; i++) s += inp[i] * w[k++];
+      s += w[NIN * NHID + h];                 // hidden bias
+      hid[h] = Math.tanh(s);
+    }
+    const ob = NIN * NHID + NHID;
+    for (let o = 0; o < NOUT; o++) {
+      let s = 0;
+      for (let h = 0; h < NHID; h++) s += hid[h] * w[ob + o * NHID + h];
+      s += w[ob + NOUT * NHID + o];           // output bias
+      out[o] = s;
+    }
+  }
+
+  sense(world) {
+    const inp = this.inp;
+    inp.fill(0);
+    const sr = this.senseR, sr2 = sr * sr;
+    const eyes = CFG.eyeAngles, cone = CFG.eyeCone;
+    const W = world.W, H = world.H;
+
+    // food eyes (0..2)
+    world.foodGrid.each(this.x, this.y, sr, (f) => {
+      if (f.gone) return;
+      const dx = wrapD(f.x - this.x, W), dy = wrapD(f.y - this.y, H);
+      const d2 = dx * dx + dy * dy;
+      if (d2 > sr2) return;
+      const ang = Math.atan2(dy, dx);
+      const near = 1 - Math.sqrt(d2) / sr;
+      for (let e = 0; e < 3; e++) {
+        const off = Math.abs(angDiff(this.heading + eyes[e], ang));
+        if (off < cone) inp[e] += near * (1 - off / cone);
+      }
+    });
+
+    // creature eyes (3..5) — weighted by their size relative to mine
+    world.creGrid.each(this.x, this.y, sr, (c) => {
+      if (c === this || c.dead) return;
+      const dx = wrapD(c.x - this.x, W), dy = wrapD(c.y - this.y, H);
+      const d2 = dx * dx + dy * dy;
+      if (d2 > sr2) return;
+      const ang = Math.atan2(dy, dx);
+      const near = (1 - Math.sqrt(d2) / sr) * clamp(c.r / this.r, 0, 2) * 0.5;
+      for (let e = 0; e < 3; e++) {
+        const off = Math.abs(angDiff(this.heading + eyes[e], ang));
+        if (off < cone) inp[e + 3] += near * (1 - off / cone);
+      }
+    });
+
+    for (let i = 0; i < 6; i++) inp[i] = clamp(inp[i], 0, 1.5);
+    inp[6] = this.energy / CFG.maxEnergy;
+    inp[7] = Math.hypot(this.vx, this.vy) / this.maxSpeed;
+    inp[8] = 1; // bias node
+  }
+
+  step(dt, world) {
+    this.age += dt;
+    this.phase += dt * 9;
+
+    this.sense(world);
+    this.brain();
+
+    const turn = Math.tanh(this.out[0]) * 3.4;          // rad/s
+    const thrust = (Math.tanh(this.out[1]) + 1) * 0.5;  // 0..1
+    this.heading = wrapP(this.heading + turn * dt, TAU);
+
+    const targetVx = Math.cos(this.heading) * this.maxSpeed * thrust;
+    const targetVy = Math.sin(this.heading) * this.maxSpeed * thrust;
+    const drag = 1 - Math.exp(-6 * dt);                 // water resistance
+    this.vx += (targetVx - this.vx) * drag;
+    this.vy += (targetVy - this.vy) * drag;
+    this.x = wrapP(this.x + this.vx * dt, world.W);
+    this.y = wrapP(this.y + this.vy * dt, world.H);
+
+    // metabolism: existing costs you; size, senses and engines cost more
+    const g = this.g;
+    const burn =
+      0.9 +
+      g.size * g.size * 1.6 +
+      g.sense * 1.1 +
+      thrust * g.speed * 2.6 +
+      g.diet * 0.3;
+    this.energy -= burn * dt;
+
+    // eat plants
+    const bite = this.r + 3;
+    world.foodGrid.each(this.x, this.y, bite, (f) => {
+      if (f.gone || this.energy >= CFG.maxEnergy) return;
+      const dx = wrapD(f.x - this.x, world.W), dy = wrapD(f.y - this.y, world.H);
+      if (dx * dx + dy * dy < bite * bite) {
+        f.gone = true;
+        this.energy = Math.min(CFG.maxEnergy, this.energy + CFG.foodEnergy * (1 - 0.68 * g.diet));
+      }
+    });
+
+    // predation: big enough + carnivorous enough + touching
+    if (g.diet > 0.45) {
+      world.creGrid.each(this.x, this.y, this.r + 6, (prey) => {
+        if (prey === this || prey.dead || this.dead) return;
+        if (this.r < prey.r * 1.18) return;
+        const dx = wrapD(prey.x - this.x, world.W), dy = wrapD(prey.y - this.y, world.H);
+        const rr = this.r + prey.r;
+        if (dx * dx + dy * dy < rr * rr) {
+          prey.dead = true; prey.killed = true;
+          this.energy = Math.min(CFG.maxEnergy, this.energy + prey.energy * 0.55 * g.diet + 6);
+          world.predations++;
+        }
+      });
+    }
+
+    // death
+    if (this.energy <= 0 || this.age > this.lifespan) this.dead = true;
+  }
+}
+
+/* ============================================================
+   WORLD
+   ============================================================ */
+function makeWorld(W, H) {
+  return {
+    W, H,
+    time: 0,
+    creatures: [],
+    food: [],
+    patches: [],
+    foodGrid: new Grid(W, H, CFG.gridCell),
+    creGrid: new Grid(W, H, CFG.gridCell),
+    foodSpawnCarry: 0,
+    births: 0, deaths: 0, predations: 0,
+    maxGen: 0,
+    predatorEraLogged: false,
+    nextMilestone: 25,
+  };
+}
+
+function seedWorld(world) {
+  world.creatures.length = 0;
+  world.food.length = 0;
+  world.patches.length = 0;
+  for (let i = 0; i < CFG.patchCount; i++)
+    world.patches.push({ x: rand(world.W), y: rand(world.H), a: rand(TAU) });
+  for (let i = 0; i < CFG.initPop; i++)
+    world.creatures.push(new Creature(randomGenome(), rand(world.W), rand(world.H), CFG.startEnergy, 0));
+  for (let i = 0; i < CFG.initFood; i++) spawnFood(world);
+  rebuildFoodGrid(world);
+}
+
+function spawnFood(world, x, y) {
+  if (world.food.length >= CFG.maxFood) return null;
+  let fx, fy;
+  if (x !== undefined) { fx = x; fy = y; }
+  else if (Math.random() < 0.8 && world.patches.length) {
+    const p = world.patches[Math.random() * world.patches.length | 0];
+    fx = wrapP(p.x + randn() * CFG.patchSigma, world.W);
+    fy = wrapP(p.y + randn() * CFG.patchSigma, world.H);
+  } else { fx = rand(world.W); fy = rand(world.H); }
+  const f = { x: fx, y: fy, gone: false };
+  world.food.push(f);
+  return f;
+}
+
+function rebuildFoodGrid(world) {
+  world.foodGrid.clear();
+  for (const f of world.food) if (!f.gone) world.foodGrid.add(f);
+}
+
+function worldStep(world, dt, foodAbundance, mutationRate) {
+  world.time += dt;
+
+  // drifting fertile patches
+  for (const p of world.patches) {
+    p.a += randn() * 0.5 * dt;
+    p.x = wrapP(p.x + Math.cos(p.a) * 14 * dt, world.W);
+    p.y = wrapP(p.y + Math.sin(p.a) * 14 * dt, world.H);
+  }
+
+  // plant growth
+  world.foodSpawnCarry += CFG.foodBaseRate * foodAbundance * dt;
+  while (world.foodSpawnCarry >= 1) {
+    world.foodSpawnCarry -= 1;
+    spawnFood(world);
+  }
+
+  // index creatures
+  world.creGrid.clear();
+  for (const c of world.creatures) world.creGrid.add(c);
+
+  // food grid: rebuild when dirty-ish (cheap enough at our scale)
+  rebuildFoodGrid(world);
+
+  // step creatures
+  for (const c of world.creatures) if (!c.dead) c.step(dt, world);
+
+  // deaths: starved bodies rot into detritus, kills leave nothing
+  const survivors = [];
+  for (const c of world.creatures) {
+    if (!c.dead) { survivors.push(c); continue; }
+    world.deaths++;
+    if (!c.killed) {
+      const n = 1 + (c.r > 5.5 ? 1 : 0);
+      for (let i = 0; i < n; i++)
+        spawnFood(world, wrapP(c.x + randn() * 6, world.W), wrapP(c.y + randn() * 6, world.H));
+    }
+  }
+  world.creatures = survivors;
+
+  // reproduction
+  const newborns = [];
+  for (const c of world.creatures) {
+    if (c.energy >= CFG.birthAt && c.age >= CFG.minBirthAge &&
+        world.creatures.length + newborns.length < CFG.maxPop) {
+      c.energy -= CFG.birthCost;
+      c.children++;
+      const child = new Creature(
+        mutateGenome(c.g, mutationRate),
+        wrapP(c.x - Math.cos(c.heading) * (c.r * 2 + 2), world.W),
+        wrapP(c.y - Math.sin(c.heading) * (c.r * 2 + 2), world.H),
+        CFG.childEnergy, c.gen + 1
+      );
+      newborns.push(child);
+      world.births++;
+      if (child.gen > world.maxGen) world.maxGen = child.gen;
+    }
+  }
+  world.creatures.push(...newborns);
+
+  // drop consumed pellets from the master list
+  if (world.food.length > 64) {
+    let i = 0, j = 0;
+    const arr = world.food;
+    for (; i < arr.length; i++) if (!arr[i].gone) arr[j++] = arr[i];
+    arr.length = j;
+  }
+}
+
+/* ============================================================
+   RENDERER
+   ============================================================ */
+const dish = document.getElementById("dish");
+const ctx = dish.getContext("2d");
+let DPR = 1, VW = 800, VH = 600;
+
+function fitCanvas() {
+  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  const rect = dish.getBoundingClientRect();
+  VW = Math.max(320, rect.width);
+  VH = Math.max(240, rect.height);
+  dish.width = Math.round(VW * DPR);
+  dish.height = Math.round(VH * DPR);
+}
+
+function drawWorld(world, selected) {
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  // water
+  const bg = ctx.createRadialGradient(VW * 0.5, VH * 0.42, 40, VW * 0.5, VH * 0.5, Math.max(VW, VH) * 0.75);
+  bg.addColorStop(0, "#0a1a23");
+  bg.addColorStop(0.6, "#06121a");
+  bg.addColorStop(1, "#030709");
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, VW, VH);
+
+  const t = world.time;
+  ctx.globalCompositeOperation = "lighter";
+
+  // drifting caustic glow around fertile patches
+  for (const p of world.patches) {
+    const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, CFG.patchSigma * 1.9);
+    g.addColorStop(0, "rgba(70, 130, 90, 0.05)");
+    g.addColorStop(1, "rgba(70, 130, 90, 0)");
+    ctx.fillStyle = g;
+    ctx.fillRect(p.x - CFG.patchSigma * 2, p.y - CFG.patchSigma * 2, CFG.patchSigma * 4, CFG.patchSigma * 4);
+  }
+
+  // plants
+  const pulse = 0.75 + 0.25 * Math.sin(t * 2.1);
+  ctx.fillStyle = `rgba(140, 220, 150, ${0.5 * pulse})`;
+  ctx.beginPath();
+  for (const f of world.food) {
+    if (f.gone) continue;
+    ctx.moveTo(f.x + 1.6, f.y);
+    ctx.arc(f.x, f.y, 1.6, 0, TAU);
+  }
+  ctx.fill();
+  ctx.fillStyle = "rgba(140, 220, 150, 0.10)";
+  ctx.beginPath();
+  for (const f of world.food) {
+    if (f.gone) continue;
+    ctx.moveTo(f.x + 4.5, f.y);
+    ctx.arc(f.x, f.y, 4.5, 0, TAU);
+  }
+  ctx.fill();
+
+  // creatures
+  for (const c of world.creatures) {
+    const g = c.g;
+    const e = clamp(c.energy / CFG.maxEnergy, 0, 1);
+    const light = lerp(34, 64, e);
+    const sat = lerp(35, 85, e);
+
+    // halo
+    ctx.fillStyle = `hsla(${g.hue}, ${sat}%, ${light}%, 0.13)`;
+    ctx.beginPath();
+    ctx.arc(c.x, c.y, c.r * 2.6, 0, TAU);
+    ctx.fill();
+
+    // tail — three fading segments wiggling behind
+    ctx.strokeStyle = `hsla(${g.hue}, ${sat}%, ${light}%, 0.5)`;
+    ctx.lineWidth = Math.max(1, c.r * 0.35);
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    let tx = c.x - Math.cos(c.heading) * c.r;
+    let ty = c.y - Math.sin(c.heading) * c.r;
+    ctx.moveTo(tx, ty);
+    for (let s = 1; s <= 3; s++) {
+      const wig = Math.sin(c.phase + s * 1.4) * 0.5;
+      const a = c.heading + Math.PI + wig * 0.6;
+      tx += Math.cos(a) * c.r * 0.9;
+      ty += Math.sin(a) * c.r * 0.9;
+      ctx.lineTo(tx, ty);
+    }
+    ctx.stroke();
+
+    // body
+    ctx.fillStyle = `hsla(${g.hue}, ${sat}%, ${light}%, 0.95)`;
+    ctx.beginPath();
+    ctx.arc(c.x, c.y, c.r, 0, TAU);
+    ctx.fill();
+
+    // carnivore core glows hot
+    if (g.diet > 0.45) {
+      ctx.fillStyle = `rgba(255, ${Math.round(lerp(140, 60, g.diet))}, 60, ${lerp(0.2, 0.95, (g.diet - 0.45) / 0.55)})`;
+      ctx.beginPath();
+      ctx.arc(c.x, c.y, c.r * 0.45, 0, TAU);
+      ctx.fill();
+    }
+  }
+
+  ctx.globalCompositeOperation = "source-over";
+
+  // selection reticle
+  if (selected && !selected.dead) {
+    const c = selected;
+    ctx.strokeStyle = "rgba(255, 180, 84, 0.85)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(c.x, c.y, c.r + 6, 0, TAU);
+    ctx.stroke();
+    ctx.strokeStyle = "rgba(255, 180, 84, 0.18)";
+    ctx.setLineDash([4, 6]);
+    ctx.beginPath();
+    ctx.arc(c.x, c.y, c.senseR, 0, TAU);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = "rgba(255, 180, 84, 0.9)";
+    ctx.font = "10px IBM Plex Mono, monospace";
+    ctx.fillText(`${c.name} · g${c.gen}`, c.x + c.r + 9, c.y - c.r - 4);
+  }
+
+  // vignette
+  const vg = ctx.createRadialGradient(VW / 2, VH / 2, Math.min(VW, VH) * 0.38, VW / 2, VH / 2, Math.max(VW, VH) * 0.72);
+  vg.addColorStop(0, "rgba(0,0,0,0)");
+  vg.addColorStop(1, "rgba(2,4,6,0.55)");
+  ctx.fillStyle = vg;
+  ctx.fillRect(0, 0, VW, VH);
+}
+
+/* ============================================================
+   CHARTS — ring-buffer sparklines
+   ============================================================ */
+const HIST = 260;
+const hist = { pop: [], diet: [], sense: [] };
+function pushHist(world) {
+  let dSum = 0, sSum = 0;
+  for (const c of world.creatures) { dSum += c.g.diet; sSum += c.senseR; }
+  const n = world.creatures.length || 1;
+  hist.pop.push(world.creatures.length);
+  hist.diet.push(dSum / n);
+  hist.sense.push(sSum / n);
+  for (const k of ["pop", "diet", "sense"]) if (hist[k].length > HIST) hist[k].shift();
+}
+
+function drawSpark(canvas, data, color, fixedMax) {
+  const c2 = canvas.getContext("2d");
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  if (canvas.width !== w * DPR) { canvas.width = w * DPR; canvas.height = h * DPR; }
+  c2.setTransform(DPR, 0, 0, DPR, 0, 0);
+  c2.clearRect(0, 0, w, h);
+  if (data.length < 2) return;
+  const max = fixedMax || Math.max(...data, 1) * 1.15;
+  c2.beginPath();
+  for (let i = 0; i < data.length; i++) {
+    const x = (i / (HIST - 1)) * w;
+    const y = h - 3 - (data[i] / max) * (h - 7);
+    i === 0 ? c2.moveTo(x, y) : c2.lineTo(x, y);
+  }
+  c2.strokeStyle = color;
+  c2.lineWidth = 1.2;
+  c2.stroke();
+  // area fill
+  const lastX = ((data.length - 1) / (HIST - 1)) * w;
+  c2.lineTo(lastX, h); c2.lineTo(0, h); c2.closePath();
+  c2.fillStyle = color.replace(/[\d.]+\)$/, "0.08)");
+  c2.fill();
+}
+
+/* ============================================================
+   BRAIN INSPECTOR
+   ============================================================ */
+const brainCanvas = document.getElementById("brainCanvas");
+const INP_LBL = ["fL", "fC", "fR", "cL", "cC", "cR", "E", "v", "1"];
+const OUT_LBL = ["turn", "go"];
+
+function drawBrain(c) {
+  const bc = brainCanvas.getContext("2d");
+  const w = brainCanvas.clientWidth, h = brainCanvas.clientHeight;
+  if (brainCanvas.width !== w * DPR) { brainCanvas.width = w * DPR; brainCanvas.height = h * DPR; }
+  bc.setTransform(DPR, 0, 0, DPR, 0, 0);
+  bc.clearRect(0, 0, w, h);
+
+  const x0 = 26, x1 = w / 2, x2 = w - 34;
+  const yAt = (i, n) => 10 + (i + 0.5) * (h - 20) / n;
+  const wts = c.g.w;
+
+  // weights input->hidden
+  for (let hh = 0; hh < NHID; hh++) for (let i = 0; i < NIN; i++) {
+    const wv = wts[hh * NIN + i];
+    if (Math.abs(wv) < 0.25) continue;
+    bc.strokeStyle = wv > 0 ? `rgba(143, 227, 168, ${clamp(Math.abs(wv) * 0.3, 0, 0.7)})`
+                            : `rgba(255, 125, 107, ${clamp(Math.abs(wv) * 0.3, 0, 0.7)})`;
+    bc.lineWidth = clamp(Math.abs(wv) * 0.7, 0.4, 2);
+    bc.beginPath(); bc.moveTo(x0, yAt(i, NIN)); bc.lineTo(x1, yAt(hh, NHID)); bc.stroke();
+  }
+  // hidden->out
+  const ob = NIN * NHID + NHID;
+  for (let o = 0; o < NOUT; o++) for (let hh = 0; hh < NHID; hh++) {
+    const wv = wts[ob + o * NHID + hh];
+    if (Math.abs(wv) < 0.25) continue;
+    bc.strokeStyle = wv > 0 ? `rgba(143, 227, 168, ${clamp(Math.abs(wv) * 0.3, 0, 0.7)})`
+                            : `rgba(255, 125, 107, ${clamp(Math.abs(wv) * 0.3, 0, 0.7)})`;
+    bc.lineWidth = clamp(Math.abs(wv) * 0.7, 0.4, 2);
+    bc.beginPath(); bc.moveTo(x1, yAt(hh, NHID)); bc.lineTo(x2, yAt(o, NOUT)); bc.stroke();
+  }
+
+  // nodes lit by live activation
+  bc.font = "8px IBM Plex Mono, monospace";
+  for (let i = 0; i < NIN; i++) {
+    const a = clamp(Math.abs(c.inp[i]), 0, 1);
+    bc.fillStyle = `rgba(232, 242, 240, ${0.25 + a * 0.75})`;
+    bc.beginPath(); bc.arc(x0, yAt(i, NIN), 2.6, 0, TAU); bc.fill();
+    bc.fillStyle = "rgba(93, 127, 132, 0.9)";
+    bc.fillText(INP_LBL[i], 4, yAt(i, NIN) + 2.5);
+  }
+  for (let hh = 0; hh < NHID; hh++) {
+    const a = (c.hid[hh] + 1) / 2;
+    bc.fillStyle = `hsla(${c.g.hue}, 70%, ${30 + a * 40}%, 0.95)`;
+    bc.beginPath(); bc.arc(x1, yAt(hh, NHID), 3, 0, TAU); bc.fill();
+  }
+  for (let o = 0; o < NOUT; o++) {
+    const a = clamp((Math.tanh(c.out[o]) + 1) / 2, 0, 1);
+    bc.fillStyle = `rgba(255, 180, 84, ${0.3 + a * 0.7})`;
+    bc.beginPath(); bc.arc(x2, yAt(o, NOUT), 3.4, 0, TAU); bc.fill();
+    bc.fillStyle = "rgba(93, 127, 132, 0.9)";
+    bc.fillText(OUT_LBL[o], x2 + 7, yAt(o, NOUT) + 2.5);
+  }
+}
+
+/* ============================================================
+   UI
+   ============================================================ */
+const $ = (id) => document.getElementById(id);
+const ui = {
+  pop: $("rPop"), food: $("rFood"), gen: $("rGen"),
+  births: $("rBirths"), deaths: $("rDeaths"), eaten: $("rEaten"),
+  clock: $("clock"),
+  chartPop: $("chartPop"), chartDiet: $("chartDiet"), chartSense: $("chartSense"),
+  popNow: $("popNow"), dietNow: $("dietNow"), senseNow: $("senseNow"),
+  log: $("log"), extinct: $("extinct"), hint: $("hint"),
+  specEmpty: $("specEmpty"), specBody: $("specBody"),
+};
+
+const state = {
+  paused: false,
+  speedIdx: 0,
+  speeds: [1, 2, 4, 8],
+  mutation: 0.35,
+  foodAbundance: 1.0,
+  selected: null,
+  reseedTimer: null,
+};
+
+function logEvent(world, msg) {
+  const li = document.createElement("li");
+  li.innerHTML = `<span class="t">t${Math.round(world.time)}</span>${msg}`;
+  ui.log.prepend(li);
+  while (ui.log.children.length > 7) ui.log.removeChild(ui.log.lastChild);
+}
+
+$("bPause").addEventListener("click", () => {
+  state.paused = !state.paused;
+  $("bPause").textContent = state.paused ? "▶ resume" : "⏸ pause";
+  $("bPause").classList.toggle("active", state.paused);
+});
+$("bSpeed").addEventListener("click", () => {
+  state.speedIdx = (state.speedIdx + 1) % state.speeds.length;
+  $("bSpeed").textContent = state.speeds[state.speedIdx] + "× speed";
+});
+$("bFeast").addEventListener("click", () => {
+  for (let i = 0; i < 160; i++) spawnFood(world);
+  logEvent(world, "a feast drifts down from above ✺");
+});
+$("bDoom").addEventListener("click", () => {
+  let killed = 0;
+  for (const c of world.creatures) if (Math.random() < 0.85) { c.dead = true; c.killed = true; killed++; }
+  logEvent(world, `☄ cataclysm — ${killed} motes perish`);
+});
+$("bReseed").addEventListener("click", () => reseed("the dish is wiped and reseeded ⟲"));
+
+$("sMut").addEventListener("input", (e) => {
+  state.mutation = parseFloat(e.target.value);
+  $("vMut").textContent = state.mutation.toFixed(2);
+});
+$("sFood").addEventListener("input", (e) => {
+  state.foodAbundance = parseFloat(e.target.value);
+  $("vFood").textContent = state.foodAbundance.toFixed(2);
+});
+
+dish.addEventListener("click", (e) => {
+  const rect = dish.getBoundingClientRect();
+  const x = e.clientX - rect.left, y = e.clientY - rect.top;
+  // nearest creature within 14px of the click
+  let best = null, bestD = 14 * 14;
+  for (const c of world.creatures) {
+    const dx = wrapD(c.x - x, world.W), dy = wrapD(c.y - y, world.H);
+    const d2 = dx * dx + dy * dy;
+    const hit = Math.max(bestD, (c.r + 8) * (c.r + 8));
+    if (d2 < hit && (best === null || d2 < bestD)) { best = c; bestD = d2; }
+  }
+  if (best) {
+    state.selected = best;
+  } else {
+    for (let i = 0; i < 6; i++)
+      spawnFood(world, wrapP(x + randn() * 9, world.W), wrapP(y + randn() * 9, world.H));
+  }
+  ui.hint.style.opacity = "0";
+});
+
+function setBar(idV, idB, text, frac) {
+  $(idV).textContent = text;
+  $(idB).style.width = (clamp(frac, 0, 1) * 100).toFixed(1) + "%";
+}
+
+function updateSpecimen() {
+  const c = state.selected;
+  if (!c) {
+    ui.specEmpty.style.display = "";
+    ui.specBody.classList.remove("show");
+    return;
+  }
+  ui.specEmpty.style.display = "none";
+  ui.specBody.classList.add("show");
+  $("spName").textContent = c.name;
+  $("spGen").textContent = `gen ${c.gen} · ${c.children} offspring`;
+  $("spDead").textContent = c.dead ? "· deceased" : "";
+  setBar("tvEnergy", "tbEnergy", Math.round(c.energy), c.energy / CFG.maxEnergy);
+  setBar("tvAge", "tbAge", Math.round(c.age) + "s", c.age / c.lifespan);
+  setBar("tvSize", "tbSize", c.r.toFixed(1) + "px", c.g.size);
+  setBar("tvSpeed", "tbSpeed", Math.round(c.maxSpeed), c.g.speed);
+  setBar("tvSense", "tbSense", Math.round(c.senseR) + "px", c.g.sense);
+  setBar("tvDiet", "tbDiet", c.g.diet < 0.45 ? "plant" : "flesh", c.g.diet);
+  drawBrain(c);
+}
+
+function updateReadout(world) {
+  ui.pop.textContent = world.creatures.length;
+  ui.food.textContent = world.food.length;
+  ui.gen.textContent = world.maxGen;
+  ui.births.textContent = world.births;
+  ui.deaths.textContent = world.deaths;
+  ui.eaten.textContent = world.predations;
+  ui.clock.textContent = `t ${Math.round(world.time)}s · gen ${world.maxGen}`;
+  const last = hist.pop.length - 1;
+  if (last >= 0) {
+    ui.popNow.textContent = hist.pop[last];
+    ui.dietNow.textContent = hist.diet[last].toFixed(2);
+    ui.senseNow.textContent = Math.round(hist.sense[last]) + "px";
+  }
+}
+
+/* ============================================================
+   MILESTONES & EXTINCTION
+   ============================================================ */
+function checkEvents(world) {
+  if (world.maxGen >= world.nextMilestone) {
+    logEvent(world, `generation ${world.nextMilestone} reached`);
+    world.nextMilestone += 25;
+  }
+  const last = hist.diet.length - 1;
+  if (!world.predatorEraLogged && last > 4 && hist.diet[last] > 0.45) {
+    world.predatorEraLogged = true;
+    logEvent(world, `a hungry lineage rises — the dish has predators`);
+  }
+  if (world.creatures.length === 0 && !state.reseedTimer) {
+    ui.extinct.classList.add("show");
+    logEvent(world, "extinction. the water stills.");
+    state.reseedTimer = setTimeout(() => reseed("life crawls back from the sediment"), 3500);
+  }
+}
+
+function reseed(msg) {
+  if (state.reseedTimer) { clearTimeout(state.reseedTimer); state.reseedTimer = null; }
+  ui.extinct.classList.remove("show");
+  const t = world.time;
+  const oldLog = msg;
+  world = makeWorld(VW, VH);
+  world.time = t;
+  seedWorld(world);
+  hist.pop.length = hist.diet.length = hist.sense.length = 0;
+  state.selected = null;
+  logEvent(world, oldLog);
+  window.SIM.world = world;
+}
+
+/* ============================================================
+   MAIN LOOP
+   ============================================================ */
+fitCanvas();
+let world = makeWorld(VW, VH);
+seedWorld(world);
+logEvent(world, `${CFG.initPop} naive motes seeded into fresh water`);
+
+window.addEventListener("resize", () => {
+  fitCanvas();
+  // keep the same world; creatures just wrap into the resized dish
+  world.W = VW; world.H = VH;
+  world.foodGrid = new Grid(VW, VH, CFG.gridCell);
+  world.creGrid = new Grid(VW, VH, CFG.gridCell);
+  for (const c of world.creatures) { c.x = wrapP(c.x, VW); c.y = wrapP(c.y, VH); }
+  for (const f of world.food) { f.x = wrapP(f.x, VW); f.y = wrapP(f.y, VH); }
+});
+
+const FIXED_DT = 1 / 60;
+let lastT = performance.now();
+let sampleAcc = 0, uiAcc = 0;
+
+function frame(now) {
+  requestAnimationFrame(frame);
+  let rdt = (now - lastT) / 1000;
+  lastT = now;
+  rdt = Math.min(rdt, 0.1);
+
+  if (!state.paused) {
+    const steps = state.speeds[state.speedIdx];
+    for (let s = 0; s < steps; s++) {
+      worldStep(world, FIXED_DT, state.foodAbundance, state.mutation);
+      sampleAcc += FIXED_DT;
+    }
+    while (sampleAcc >= 0.5) {
+      sampleAcc -= 0.5;
+      pushHist(world);
+    }
+    checkEvents(world);
+  }
+
+  drawWorld(world, state.selected);
+
+  uiAcc += rdt;
+  if (uiAcc > 0.15) {
+    uiAcc = 0;
+    updateReadout(world);
+    updateSpecimen();
+    drawSpark(ui.chartPop, hist.pop, "rgba(143, 227, 168, 0.9)");
+    drawSpark(ui.chartDiet, hist.diet, "rgba(255, 125, 107, 0.9)", 1);
+    drawSpark(ui.chartSense, hist.sense, "rgba(255, 180, 84, 0.9)", 110);
+  }
+}
+
+/* debug / test handle */
+window.SIM = { world, state, CFG, hist, get pop() { return world.creatures.length; } };
+
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
