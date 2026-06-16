@@ -1,0 +1,158 @@
+.macro {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--board-gap);
+  width: min(100%, calc(100dvh - var(--chrome-h)));
+  aspect-ratio: 1;
+  margin-inline: auto;
+}
+
+/* Input locked while the AI is thinking. */
+.macro[aria-busy="true"] {
+  pointer-events: none;
+}
+
+.board {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+  background: var(--surface-1);
+  border-radius: var(--radius-m);
+  box-shadow: var(--shadow-1);
+  overflow: hidden;
+  transition:
+    box-shadow var(--dur-med) var(--ease-out),
+    background var(--dur-med) var(--ease-out);
+}
+
+/* Active board: 2px ring + soft tint of the player to move (render sets
+   --turn-color/--turn-soft on .macro). Free choice: every open board gets
+   .board--choice with a fainter ring/tint. */
+.board--active {
+  box-shadow:
+    var(--shadow-1),
+    0 0 0 2px var(--turn-color);
+  background: var(--turn-soft);
+}
+
+.board--choice {
+  box-shadow:
+    var(--shadow-1),
+    0 0 0 1px color-mix(in srgb, var(--turn-color) 45%, transparent);
+  background: color-mix(in srgb, var(--turn-soft) 45%, var(--surface-1));
+}
+
+.cell {
+  appearance: none;
+  border: none;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  font-weight: 700;
+  font-size: clamp(14px, 4.2vmin, 38px);
+  line-height: 1;
+  touch-action: manipulation;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.cell:nth-child(3n) {
+  border-right: none;
+}
+
+.cell:nth-child(n + 7) {
+  border-bottom: none;
+}
+
+.cell:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: -2px;
+  border-radius: var(--radius-s);
+}
+
+.cell:not([aria-disabled="true"]):active {
+  background: var(--surface-2);
+}
+
+.cell--x {
+  color: var(--color-x);
+}
+
+.cell--o {
+  color: var(--color-o);
+}
+
+/* Last-move indicator: 6px dot in the mover's color, bottom-center */
+.cell {
+  position: relative;
+}
+
+.cell--last::after {
+  content: "";
+  position: absolute;
+  bottom: 7%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* Closed boards */
+.board--won-x,
+.board--won-o,
+.board--draw {
+  box-shadow: var(--shadow-1);
+}
+
+.board--won-x {
+  background: var(--color-x-soft);
+}
+
+.board--won-o {
+  background: var(--color-o-soft);
+}
+
+.board--won-x .cell,
+.board--won-o .cell {
+  opacity: 0.18;
+  border-color: transparent;
+}
+
+.board--draw {
+  background: var(--surface-2);
+}
+
+.board--draw .cell {
+  opacity: 0.3;
+}
+
+.board__claim {
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(28px, 16vmin, 130px);
+  font-weight: 800;
+  pointer-events: none;
+}
+
+.board--won-x .board__claim {
+  display: flex;
+  color: var(--color-x);
+}
+
+.board--won-o .board__claim {
+  display: flex;
+  color: var(--color-o);
+}
+
+.board--draw .board__claim {
+  display: flex;
+  color: var(--ink-muted);
+}

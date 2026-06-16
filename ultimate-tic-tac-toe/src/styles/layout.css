@@ -1,0 +1,103 @@
+#app {
+  height: 100dvh;
+}
+
+/* Game screen never scrolls during play: chrome shrinks before the board. */
+.screen--game {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    "hud"
+    "board"
+    "controls"
+    "history";
+  row-gap: var(--space-2);
+  height: 100dvh;
+  overflow: hidden;
+  padding: var(--space-3);
+  max-width: 720px;
+  margin-inline: auto;
+}
+
+/* Portrait: horizontal scroll strip under the controls. */
+.history {
+  grid-area: history;
+  display: flex;
+  gap: var(--space-3);
+  overflow-x: auto;
+  margin: 0;
+  padding: var(--space-1) var(--space-2);
+  list-style: none;
+  min-height: 1.6em;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  scrollbar-width: thin;
+}
+
+.history__item {
+  display: inline-flex;
+  gap: 3px;
+  white-space: nowrap;
+  color: var(--ink-muted);
+}
+
+.history__mark--x {
+  color: var(--color-x);
+  font-weight: 700;
+}
+
+.history__mark--o {
+  color: var(--color-o);
+  font-weight: 700;
+}
+
+.hud {
+  grid-area: hud;
+}
+
+.macro {
+  grid-area: board;
+  align-self: center;
+}
+
+.controls {
+  grid-area: controls;
+  display: flex;
+  justify-content: center;
+  gap: var(--space-2);
+  padding-block: var(--space-2);
+}
+
+@media (min-width: 880px) {
+  .screen--game {
+    grid-template-columns: minmax(0, 640px) 260px;
+    grid-template-rows: auto auto minmax(0, 1fr);
+    grid-template-areas:
+      "board hud"
+      "board controls"
+      "board history";
+    align-content: center;
+    column-gap: var(--space-5);
+    max-width: 960px;
+  }
+
+  .hud {
+    align-self: end;
+  }
+
+  .controls {
+    align-self: start;
+    justify-content: flex-start;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  /* Desktop: vertical sidebar list. */
+  .history {
+    flex-direction: column;
+    overflow-y: auto;
+    overflow-x: hidden;
+    align-content: start;
+    max-height: 100%;
+  }
+}

@@ -1,0 +1,122 @@
+.screen--menu {
+  display: grid;
+  place-items: center;
+  min-height: 100dvh;
+  padding: var(--space-4);
+}
+
+.menu {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  width: min(360px, 100%);
+  padding: var(--space-5) var(--space-4);
+  background: var(--surface-1);
+  border-radius: var(--radius-l);
+  box-shadow: var(--shadow-2);
+}
+
+.menu__title {
+  margin: 0;
+  font-size: 1.7rem;
+  font-weight: 800;
+  text-align: center;
+  letter-spacing: -0.02em;
+}
+
+.menu__title-x {
+  color: var(--color-x);
+}
+
+.menu__title-o {
+  color: var(--color-o);
+}
+
+.menu__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.menu__label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-muted);
+}
+
+.menu__seggroup {
+  display: flex;
+  gap: var(--space-1);
+  background: var(--surface-2);
+  border-radius: var(--radius-m);
+  padding: var(--space-1);
+}
+
+.seg {
+  flex: 1;
+  appearance: none;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-s);
+  padding: var(--space-2) var(--space-2);
+  font-weight: 600;
+  color: var(--ink-muted);
+  touch-action: manipulation;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+
+.seg[aria-checked="true"] {
+  background: var(--surface-1);
+  color: var(--ink);
+  box-shadow: var(--shadow-1);
+}
+
+.seg:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.seg:focus-visible {
+  outline: 2px solid var(--color-x);
+  outline-offset: 1px;
+}
+
+.menu__start {
+  padding: var(--space-3);
+  font-size: 1.05rem;
+}
+
+.menu__scores {
+  margin: 0;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+  min-height: 1.2em;
+}
+
+.menu__reset {
+  appearance: none;
+  border: none;
+  background: none;
+  align-self: center;
+  margin-top: calc(-1 * var(--space-3));
+  padding: var(--space-1) var(--space-2);
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+  text-decoration: underline;
+  touch-action: manipulation;
+}
+
+.menu__reset--armed {
+  color: var(--color-o);
+  font-weight: 700;
+}
+
+.menu__reset:focus-visible {
+  outline: 2px solid var(--color-x);
+  outline-offset: 1px;
+}
