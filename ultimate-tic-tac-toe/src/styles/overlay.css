@@ -1,0 +1,52 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  display: none;
+  z-index: 10;
+}
+
+.overlay--open {
+  display: block;
+}
+
+/* Board stays visible behind a light dim. */
+.overlay__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgb(15 23 42 / 0.35);
+}
+
+.overlay__panel {
+  position: absolute;
+  left: 50%;
+  bottom: max(8dvh, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: min(320px, calc(100vw - 2 * var(--space-3)));
+  padding: var(--space-4);
+  background: var(--surface-1);
+  border-radius: var(--radius-l);
+  box-shadow: var(--shadow-2);
+}
+
+.overlay__title {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 800;
+}
+
+.overlay__title--x {
+  color: var(--color-x);
+}
+
+.overlay__title--o {
+  color: var(--color-o);
+}
+
+.overlay__actions {
+  display: flex;
+  gap: var(--space-2);
+}

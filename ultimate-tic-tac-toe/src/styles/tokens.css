@@ -1,0 +1,41 @@
+:root {
+  /* players */
+  --color-x: #2563eb;
+  --color-x-soft: #dbeafe; /* blue */
+  --color-o: #ea580c;
+  --color-o-soft: #ffedd5; /* orange */
+  /* neutrals (slate) */
+  --surface-0: #f8fafc;
+  --surface-1: #ffffff;
+  --surface-2: #eef2f7;
+  --ink: #0f172a;
+  --ink-muted: #64748b;
+  --line: #e2e8f0;
+  /* shape & space */
+  --radius-s: 6px;
+  --radius-m: 12px;
+  --radius-l: 20px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 16px;
+  --space-4: 24px;
+  --space-5: 40px;
+  --shadow-1: 0 1px 3px rgb(15 23 42 / 0.08);
+  --shadow-2: 0 8px 24px rgb(15 23 42 / 0.12);
+  /* motion */
+  --dur-fast: 120ms;
+  --dur-med: 240ms;
+  --dur-slow: 400ms;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  /* board sizing */
+  --board-gap: clamp(4px, 1.2vw, 10px);
+  --chrome-h: 210px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0ms;
+    --dur-med: 0ms;
+    --dur-slow: 0ms;
+  }
+}

@@ -1,0 +1,143 @@
+/* One-shot classes are added by render() when diffing prev state and removed
+   on animationend (delegated listener on .macro). */
+
+/* Mark placement: scale .6 → 1 + fade, 150ms */
+.anim-pop {
+  animation: anim-pop 150ms var(--ease-out);
+}
+
+@keyframes anim-pop {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+}
+
+/* Board capture: claim mark scale 1.25 → 1 + fade-in 300ms */
+.anim-claim {
+  animation: anim-claim 300ms var(--ease-out);
+}
+
+@keyframes anim-claim {
+  from {
+    transform: scale(1.25);
+    opacity: 0;
+  }
+}
+
+/* Cells dim over 240ms when their board closes */
+.cell {
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    opacity 240ms var(--ease-out);
+}
+
+/* Win line reveal: the three winning boards pulse sequentially (80ms
+   stagger via --pulse-delay), then the SVG line draws. */
+.anim-pulse {
+  animation: anim-pulse 240ms var(--ease-out) both;
+  animation-delay: var(--pulse-delay, 0ms);
+}
+
+@keyframes anim-pulse {
+  50% {
+    transform: scale(1.045);
+  }
+}
+
+.winline {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.winline line {
+  stroke-width: 7;
+  stroke-linecap: round;
+  opacity: 0.85;
+}
+
+.winline--draw line {
+  animation: anim-winline 400ms var(--ease-out) 280ms both;
+}
+
+@keyframes anim-winline {
+  from {
+    stroke-dashoffset: var(--winline-len, 600);
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Result overlay: backdrop fade + panel slide-up 240ms */
+.overlay--open .overlay__backdrop {
+  animation: anim-fade 240ms var(--ease-out) both;
+}
+
+.overlay--open .overlay__panel {
+  animation: anim-slide-up 240ms var(--ease-out) both;
+}
+
+@keyframes anim-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes anim-slide-up {
+  from {
+    transform: translate(-50%, 24px);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+}
+
+/* Illegal-tap feedback: required board shakes ±3px, 200ms */
+.anim-shake {
+  animation: anim-shake 200ms;
+}
+
+@keyframes anim-shake {
+  25% {
+    transform: translateX(-3px);
+  }
+  75% {
+    transform: translateX(3px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-pop,
+  .anim-claim,
+  .anim-pulse,
+  .overlay--open .overlay__backdrop,
+  .overlay--open .overlay__panel {
+    animation: none;
+  }
+
+  .winline--draw line {
+    animation: none;
+    stroke-dashoffset: 0 !important;
+  }
+
+  .cell {
+    transition: none;
+  }
+
+  /* Reduced-motion illegal tap: the active ring blinks once instead */
+  .anim-shake {
+    animation: anim-blink 200ms;
+  }
+
+  @keyframes anim-blink {
+    50% {
+      opacity: 0.4;
+    }
+  }
+}
