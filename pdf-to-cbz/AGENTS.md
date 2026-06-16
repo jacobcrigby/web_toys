@@ -158,5 +158,4 @@ just the session that started it. To resume:
 3. Continue at the first unchecked item in `PROGRESS.md`; update and commit it as you go.
 
 Everything needed lives in the repo as plain markdown — no vendor-specific harness,
-skill, or MCP server is required. Build/test/run via the standard `npm` scripts (added
-in Phase 1): `npm run dev` · `npm run build` · `npm run preview` · `npm test`.
+skill, or MCP server is required. Build/test/run via pnpm: `pnpm dev` · `pnpm build` · `pnpm preview` · `pnpm test`.

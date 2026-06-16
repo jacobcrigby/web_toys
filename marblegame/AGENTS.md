@@ -28,12 +28,12 @@ walls and a few test boxes for collision. See `PLAN.md` for scope and phases.
 > in Phase 0 — create them per `PLAN.md` before doing anything else.
 
 ```bash
-npm install        # install dependencies
-npm run dev        # start Vite dev server with HMR
-npm run build      # type-check + production build
-npm run preview    # serve the production build locally
-npm run typecheck  # tsc --noEmit
-npm run check:physics  # headless NullEngine+Havok physics assertions
+pnpm install        # install dependencies (run from repo root)
+pnpm dev            # start Vite dev server with HMR
+pnpm build          # type-check + production build
+pnpm preview        # serve the production build locally
+pnpm typecheck      # tsc --noEmit
+pnpm check:physics  # headless NullEngine+Havok physics assertions
 ```
 
 ## Repository layout
@@ -46,7 +46,7 @@ marblegame/
   vite.config.ts
   public/                 # static assets served as-is (Havok wasm, audio, env)
   scripts/
-    physicsCheck.ts       # headless physics verification (npm run check:physics)
+    physicsCheck.ts       # headless physics verification (pnpm check:physics)
   docs/
     alpha-plan.html       # the detailed Alpha plan (design of record)
   src/
