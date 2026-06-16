@@ -12,15 +12,15 @@ Out of scope (do not add): online multiplayer, backend, accounts, i18n, coverage
 
 | Command | What |
 |---|---|
-| `npm run dev` | Dev server at `http://localhost:5173/ultimate-tic-tac-toe/` (base path applies in dev too) |
-| `npm test` / `npm run test:watch` | Vitest run / watch (node env, picks up `src/**/*.test.ts` only) |
-| `npm run typecheck` | `tsc --noEmit` |
-| `npm run lint` / `npm run format` | `biome check .` / `biome format --write .` |
-| `npm run build` | typecheck + `vite build` |
-| `npm run preview` | Serve the production build locally |
+| `pnpm dev` | Dev server at `http://localhost:5173/ultimate-tic-tac-toe/` (base path applies in dev too) |
+| `pnpm test` / `pnpm run test:watch` | Vitest run / watch (node env, picks up `src/**/*.test.ts` only) |
+| `pnpm typecheck` | `tsc --noEmit` |
+| `pnpm lint` / `pnpm format` | `biome check .` / `biome format --write .` |
+| `pnpm build` | typecheck + `vite build` |
+| `pnpm preview` | Serve the production build locally |
 
 **Canonical gate** (run before claiming any task done):
-`npm run typecheck && npm run lint && npm test && npm run build`
+`pnpm typecheck && pnpm lint && pnpm test && pnpm build`
 
 ## Architecture
 
