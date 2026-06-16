@@ -1,0 +1,143 @@
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#4338ca" />
+    <meta
+      name="description"
+      content="Convert a PDF into a CBZ comic archive entirely in your browser."
+    />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <title>PDF → CBZ</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        font-family: system-ui, sans-serif;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 1.5rem;
+        box-sizing: border-box;
+      }
+      main {
+        width: 100%;
+        max-width: 32rem;
+        text-align: center;
+      }
+      h1 {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+      }
+      .dropzone {
+        display: block;
+        border: 2px dashed currentColor;
+        border-radius: 0.75rem;
+        padding: 3rem 1.5rem;
+        cursor: pointer;
+        opacity: 0.75;
+        transition: opacity 0.15s ease;
+      }
+      .dropzone:hover,
+      .dropzone:focus-visible,
+      .dropzone.dragging {
+        opacity: 1;
+      }
+      .visually-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+      }
+      .status {
+        margin-top: 1rem;
+        min-height: 1.5em;
+      }
+      .warning {
+        margin-top: 0.5rem;
+        min-height: 0;
+        font-size: 0.9rem;
+        opacity: 0.85;
+      }
+      .warning:empty {
+        display: none;
+      }
+      .progress {
+        width: 100%;
+        margin-top: 0.5rem;
+      }
+      .cancel {
+        margin-top: 0.75rem;
+        font: inherit;
+        padding: 0.4rem 1.25rem;
+        cursor: pointer;
+      }
+      .metadata {
+        margin-top: 1.5rem;
+        text-align: left;
+      }
+      .metadata-row {
+        display: grid;
+        grid-template-columns: 9rem 1fr;
+        gap: 0.5rem;
+        align-items: center;
+        margin-bottom: 0.5rem;
+      }
+      .metadata-row input,
+      .metadata-row textarea,
+      .metadata-row select {
+        width: 100%;
+        box-sizing: border-box;
+        font: inherit;
+        padding: 0.3rem 0.4rem;
+      }
+      .metadata-toggle {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+        cursor: pointer;
+      }
+      .metadata-toggle input {
+        width: auto;
+      }
+      .metadata-actions {
+        display: flex;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+      }
+      .metadata-actions button {
+        font: inherit;
+        padding: 0.5rem 1.25rem;
+        cursor: pointer;
+      }
+      @media (max-width: 30rem) {
+        .metadata-row {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>PDF → CBZ</h1>
+      <label id="dropzone" class="dropzone" for="file-input">
+        Drop a PDF here, or click to choose
+      </label>
+      <input id="file-input" class="visually-hidden" type="file" accept="application/pdf" />
+      <p id="status" class="status" aria-live="polite"></p>
+      <p id="warning" class="warning" aria-live="polite"></p>
+      <progress id="progress" class="progress" max="1" value="0" hidden></progress>
+      <button id="cancel" class="cancel" type="button" hidden>Cancel</button>
+      <section id="metadata" class="metadata" hidden aria-label="Comic metadata"></section>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
