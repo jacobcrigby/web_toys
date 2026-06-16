@@ -44,6 +44,12 @@ jobs:
           cp -r pdf-to-cbz/dist dist/pdf-to-cbz
           cp -r marblegame/dist dist/marblegame
 
+      - uses: actions/configure-pages@v4
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/
+
   deploy:
     needs: build
     runs-on: ubuntu-latest
