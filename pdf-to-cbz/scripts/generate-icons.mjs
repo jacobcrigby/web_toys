@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: Apache-2.0
 // Generate the PWA icon set from a single vector-ish drawing, with no image
 // dependency: pixels are composited into an RGBA buffer and encoded to PNG via
 // Node's built-in zlib. Re-run with `node scripts/generate-icons.mjs` if the mark

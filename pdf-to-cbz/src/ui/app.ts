@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: Apache-2.0
 import { startConversion } from '../controller';
 import { inputWarning } from '../core/input-warning';
 import { stripPdfExtension, type PageExt } from '../core/naming';

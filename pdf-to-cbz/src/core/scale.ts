@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: Apache-2.0
 import { MAX_SCALE, NATIVE_MAX_LONG_EDGE_PX, TARGET_LONG_EDGE_PX } from './render-config';
 
 // Pages render at 1:1 or larger, never smaller: downscaling is left to the

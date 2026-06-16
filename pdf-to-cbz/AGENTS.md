@@ -27,8 +27,8 @@ that would.
   in-scope goals. The service worker may cache the app shell and bundled
   dependencies, but **must never cache or transmit user files**.
 - **No telemetry or analytics.** No third-party tracking, no phone-home.
-- **License: AGPL-3.0-or-later.** New source files carry an SPDX header:
-  `// SPDX-License-Identifier: AGPL-3.0-or-later`. Keep dependencies license-compatible.
+- **License: Apache-2.0.** New source files carry an SPDX header:
+  `// SPDX-License-Identifier: Apache-2.0`. Keep dependencies license-compatible.
 
 ## 3. Target environment
 

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: Apache-2.0
 import type { ComicMetadata } from './pdf-metadata';
 
 // Marking the first image as the cover lets readers use it for the thumbnail.

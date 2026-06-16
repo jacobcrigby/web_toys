@@ -1,4 +1,4 @@
-<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
 
 # pdf-to-cbz — v1 Specification
 
@@ -107,7 +107,7 @@ quality, DPI, page range) beyond the single quality default; server features of 
 - **NFR-3 Targets:** current desktop Chrome/Edge/Firefox/Safari and Mobile Chrome are
   required; Mobile Safari is best-effort. Behavior is gated by **measured runtime
   capability (§7)**, not by a hard-coded device class.
-- **NFR-4 Licensing:** AGPL-3.0-or-later; every source file carries the SPDX header.
+- **NFR-4 Licensing:** Apache-2.0; every source file carries the SPDX header.
 - **NFR-5 Maintainability/testability:** pure logic isolated from DOM/worker glue and unit
   tested; TypeScript strict.
 - **NFR-6 Portability/handoff:** all authoritative artifacts live in the repo as plain

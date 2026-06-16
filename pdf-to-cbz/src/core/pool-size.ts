@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: Apache-2.0
 
 // A bounded pool keeps peak memory predictable; converges to a single worker on
 // weak devices. Each worker holds its own PDF copy (no SharedArrayBuffer on a

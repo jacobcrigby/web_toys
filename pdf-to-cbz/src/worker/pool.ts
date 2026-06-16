@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: Apache-2.0
 import { createPageScheduler } from '../core/page-scheduler';
 import type { RawPdfMetadata } from '../core/pdf-metadata';
 import type { RenderRequest, RenderResponse } from '../core/types';
