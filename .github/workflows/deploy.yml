@@ -20,18 +20,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
+          cache: 'pnpm'
 
-      - name: Build ultimate-tic-tac-toe
-        run: cd ultimate-tic-tac-toe && npm ci && npm run build
+      - name: Install dependencies
+        run: pnpm install
 
-      - name: Build pdf-to-cbz
-        run: cd pdf-to-cbz && npm ci && npm run build
-
-      - name: Build marblegame
-        run: cd marblegame && npm ci && npm run build
+      - name: Build all projects
+        run: pnpm run build:all
 
       - name: Assemble dist
         run: |
@@ -41,12 +43,6 @@ jobs:
           cp -r microcosm dist/microcosm
           cp -r pdf-to-cbz/dist dist/pdf-to-cbz
           cp -r marblegame/dist dist/marblegame
-
-      - uses: actions/configure-pages@v4
-
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist/
 
   deploy:
     needs: build

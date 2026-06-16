@@ -1,0 +1,6 @@
+packages:
+  - 'ultimate-tic-tac-toe'
+  - 'pdf-to-cbz'
+  - 'marblegame'
+allowBuilds:
+  esbuild: true
