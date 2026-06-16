@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: Apache-2.0
 
 /** A neutral summary of a page's drawing operators, free of pdf.js specifics. */
 export interface PageOpSummary {

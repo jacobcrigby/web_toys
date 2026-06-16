@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: Apache-2.0
 
 // pdf.js signals its failure modes through the `name` of the thrown error
 // (PasswordException, InvalidPDFException, …). Map the ones a user can act on to

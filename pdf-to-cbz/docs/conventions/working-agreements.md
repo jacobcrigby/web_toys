@@ -1,4 +1,4 @@
-<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
 
 # Working Agreements
 
@@ -42,7 +42,7 @@ agent (Claude Code, Antigravity, OpenCode, Codex, …) sees the same guidance.
   **(b) minimizing network traffic** — not "privacy-first." State it that way.
 - Targets adapt to **measured runtime capability**, not device class. Desktop evergreen +
   Mobile Chrome required; Mobile Safari best-effort.
-- License: AGPL-3.0-or-later; SPDX header on every source file.
+- License: Apache-2.0; SPDX header on every source file.
 - First reader target is Tachiyomi/Mihon on Android (context only; out of the spec) — it
   confirms WebP + ComicInfo.xml are safe choices.
 

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: Apache-2.0
 
 // Conservative resource hints used when the browser does not report a value.
 const DEFAULT_HARDWARE_CONCURRENCY = 1;

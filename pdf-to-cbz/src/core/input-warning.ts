@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: Apache-2.0
 
 // A soft, non-blocking heads-up shown before conversion (spec §8 / D8 defaults): a
 // large PDF takes a while, and without streaming delivery the whole archive is held

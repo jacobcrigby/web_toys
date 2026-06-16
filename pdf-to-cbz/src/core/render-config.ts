@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: Apache-2.0
 
 // Render tuning is build-time configurable through Vite env vars so output
 // resolution and size can be adjusted without touching code. An out-of-range or
