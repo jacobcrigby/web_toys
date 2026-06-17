@@ -23,16 +23,19 @@ const NOUNS = [
   'vole', 'wren',
 ]
 
+function randomIndex(max: number): number {
+  const buf = new Uint32Array(1)
+  crypto.getRandomValues(buf)
+  return (buf[0] as number) % max
+}
+
 function pick<T>(arr: T[]): T {
-  const idx = Math.floor(Math.random() * arr.length)
-  // arr is never empty; cast is safe
-  return arr[idx] as T
+  return arr[randomIndex(arr.length)] as T
 }
 
 /** Returns a random human-readable code, e.g. "swift-panda-7". */
 export function generateCode(): string {
-  const digit = Math.floor(Math.random() * 10)
-  return `${pick(ADJECTIVES)}-${pick(NOUNS)}-${digit}`
+  return `${pick(ADJECTIVES)}-${pick(NOUNS)}-${randomIndex(10)}`
 }
 
 /** Returns the Trystero room ID for a given appId + human-readable code.
