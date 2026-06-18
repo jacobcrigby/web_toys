@@ -7,6 +7,8 @@ let difficultyGroup: HTMLElement;
 let difficultyBtns: HTMLButtonElement[] = [];
 let sideGroup: HTMLElement;
 let sideBtns: HTMLButtonElement[] = [];
+let startBtn: HTMLButtonElement;
+let onlineGroup: HTMLElement;
 let scoresEl: HTMLElement;
 let resetBtn: HTMLButtonElement;
 let disarmReset: () => void = () => {};
@@ -28,6 +30,7 @@ export function buildMenu(actions: Actions): HTMLElement {
   modeBtns = [
     seg('2 players', () => actions.onSetting('mode', 'hotseat')),
     seg('vs AI', () => actions.onSetting('mode', 'ai')),
+    seg('Online', () => actions.onSetting('mode', 'online')),
   ];
   difficultyBtns = [
     seg('Easy', () => actions.onSetting('difficulty', 'easy')),
@@ -56,10 +59,34 @@ export function buildMenu(actions: Actions): HTMLElement {
     ),
   ]);
 
-  const startBtn = h('button', { class: 'btn btn--primary menu__start', type: 'button' }, [
+  startBtn = h('button', { class: 'btn btn--primary menu__start', type: 'button' }, [
     'Start game',
-  ]);
+  ]) as HTMLButtonElement;
   startBtn.addEventListener('click', () => actions.onStart());
+
+  const joinInput = h('input', {
+    class: 'menu__join-input',
+    type: 'text',
+    placeholder: 'Room code',
+    'aria-label': 'Join room code',
+  }) as HTMLInputElement;
+
+  const joinBtn = h('button', { class: 'btn', type: 'button' }, ['Join game']) as HTMLButtonElement;
+  joinBtn.addEventListener('click', () => {
+    const code = joinInput.value.trim();
+    if (code) actions.onJoinOnlineGuest(code);
+  });
+
+  const createBtn = h('button', { class: 'btn btn--primary', type: 'button' }, [
+    'Create game',
+  ]) as HTMLButtonElement;
+  createBtn.addEventListener('click', () => actions.onStartOnlineHost('X'));
+
+  onlineGroup = h('div', { class: 'menu__field menu__online-controls' }, [
+    createBtn,
+    h('span', { class: 'menu__label' }, ['— or join —']),
+    h('div', { class: 'menu__join-row' }, [joinInput, joinBtn]),
+  ]);
 
   scoresEl = h('p', { class: 'menu__scores' }, ['']);
 
@@ -102,6 +129,7 @@ export function buildMenu(actions: Actions): HTMLElement {
       ]),
       difficultyGroup,
       sideGroup,
+      onlineGroup,
       startBtn,
       scoresEl,
       resetBtn,
@@ -113,6 +141,7 @@ export function syncMenu(state: AppState): void {
   const { mode, difficulty, humanPlays } = state.settings;
   modeBtns[0]?.setAttribute('aria-checked', String(mode === 'hotseat'));
   modeBtns[1]?.setAttribute('aria-checked', String(mode === 'ai'));
+  modeBtns[2]?.setAttribute('aria-checked', String(mode === 'online'));
   const diffs = ['easy', 'medium', 'hard'] as const;
   difficultyBtns.forEach((btn, i) => {
     btn.setAttribute('aria-checked', String(difficulty === diffs[i]));
@@ -121,6 +150,8 @@ export function syncMenu(state: AppState): void {
   sideBtns[1]?.setAttribute('aria-checked', String(humanPlays === 'O'));
   difficultyGroup.hidden = mode !== 'ai';
   sideGroup.hidden = mode !== 'ai';
+  onlineGroup.hidden = mode !== 'online';
+  startBtn.hidden = mode === 'online';
   const { x, o, draws } = state.scores;
   const hasScores = x + o + draws > 0;
   scoresEl.textContent = hasScores ? `Lifetime: X ${x} · ${o} O · ${draws} draws` : '';

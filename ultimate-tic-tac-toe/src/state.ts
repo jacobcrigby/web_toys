@@ -1,6 +1,8 @@
+// SPDX-License-Identifier: Apache-2.0
+import type { PeerStatus } from '@web-toys/multiplayer';
 import type { GameHistory, Player } from './engine/index.ts';
 
-export type Mode = 'hotseat' | 'ai';
+export type Mode = 'hotseat' | 'ai' | 'online';
 export type Difficulty = 'easy' | 'medium' | 'hard';
 
 export interface Settings {
@@ -16,12 +18,22 @@ export interface Scores {
   draws: number;
 }
 
+export interface Connection {
+  roomCode: string;
+  mySide: Player;
+  status: PeerStatus;
+  isHost: boolean;
+}
+
 export interface AppState {
-  screen: 'menu' | 'game';
+  screen: 'menu' | 'lobby' | 'game';
   settings: Settings;
   history: GameHistory | null; // game state = currentState(history)
   aiThinking: boolean;
   scores: Scores; // in-memory until Phase 5
+  connection: Connection | null;
+  /** ms since epoch when disconnect started; null when connected. Used for 30s timeout. */
+  disconnectedAt: number | null;
 }
 
 export function defaultSettings(): Settings {
@@ -35,5 +47,7 @@ export function createAppState(): AppState {
     history: null,
     aiThinking: false,
     scores: { x: 0, o: 0, draws: 0 },
+    connection: null,
+    disconnectedAt: null,
   };
 }

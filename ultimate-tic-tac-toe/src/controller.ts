@@ -1,6 +1,8 @@
+import type { PeerStatus, Room } from '@web-toys/multiplayer';
+import { createRoom, joinRoom as joinNetRoom } from '@web-toys/multiplayer';
 import type { AiDifficulty, AiPlayer, Rng } from './ai/index.ts';
 import { mulberry32 } from './ai/index.ts';
-import type { GameState, GridIndex, Move } from './engine/index.ts';
+import type { GameState, GridIndex, Move, Player } from './engine/index.ts';
 import {
   createHistory,
   createInitialState,
@@ -10,6 +12,7 @@ import {
   undo as undoMoves,
   undoToPlayerTurn,
 } from './engine/index.ts';
+import { MultiplayerSession } from './network/session.ts';
 import type { AppState, Settings } from './state.ts';
 import { createAppState } from './state.ts';
 import { loadPersisted, savePersisted } from './storage.ts';
@@ -30,6 +33,8 @@ export class GameController {
   private ai: AiPlayer | null = null;
   private aiAbort: AbortController | null = null;
   private rng: Rng = mulberry32(Date.now() >>> 0);
+  private session: MultiplayerSession | null = null;
+  private disconnectTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
     private root: HTMLElement,
@@ -52,11 +57,31 @@ export class GameController {
       onStart: () => this.startGame(),
       onResetScores: () => this.resetScores(),
       onSetting: (k, v) => this.setSetting(k, v as never),
+      onStartOnlineHost: (side) => {
+        void this.startOnlineHost(side);
+      },
+      onJoinOnlineGuest: (code) => {
+        void this.startOnlineGuest(code);
+      },
+      onLobbyCodeChange: (code) => {
+        void this.lobbyCodeChange(code);
+      },
+      onLobbyCopyLink: () => {
+        const code = this.state.connection?.roomCode;
+        if (code) {
+          const url = new URL(location.href);
+          url.searchParams.set('room', code);
+          void navigator.clipboard.writeText(url.toString());
+        }
+      },
+      onLobbyCancel: () => this.lobbyCancel(),
+      onResign: () => this.resignOnline(),
     });
     render(this.state, null);
   }
 
   undo(): void {
+    if (this.state.settings.mode === 'online') return;
     const history = this.state.history;
     if (!history || this.state.aiThinking || history.entries.length === 0) {
       return;
@@ -103,11 +128,179 @@ export class GameController {
     this.abortAiTurn();
     this.ai?.dispose();
     this.ai = null;
+    this.session?.destroy();
+    this.session = null;
+    this._clearDisconnectTimer();
     this.commit((s) => {
       s.screen = 'menu';
       s.history = null;
       s.aiThinking = false;
+      s.connection = null;
+      s.disconnectedAt = null;
     });
+  }
+
+  async startOnlineHost(side: Player): Promise<void> {
+    // Reuse existing code when called from the lobby (e.g., side-button change);
+    // generate a new code when first entering the lobby from the menu.
+    const existingCode = this.state.connection?.isHost ? this.state.connection.roomCode : undefined;
+    this.session?.destroy();
+    this.session = null;
+    try {
+      const room: Room = existingCode
+        ? await joinNetRoom(existingCode, { appId: 'web-toys-uttt-v1' })
+        : await createRoom({ appId: 'web-toys-uttt-v1' });
+      this.commit((s) => {
+        s.screen = 'lobby';
+        s.settings.mode = 'online';
+        s.connection = { roomCode: room.code, mySide: side, status: 'waiting', isHost: true };
+      });
+      this._setupSession(room, true, side);
+    } catch {
+      // relay unreachable — return to menu
+      this.commit((s) => {
+        s.screen = 'menu';
+        s.connection = null;
+      });
+    }
+  }
+
+  async startOnlineGuest(code: string): Promise<void> {
+    this.commit((s) => {
+      s.screen = 'lobby';
+      s.settings.mode = 'online';
+      s.connection = { roomCode: code, mySide: 'O', status: 'waiting', isHost: false };
+    });
+    try {
+      const room: Room = await joinNetRoom(code, { appId: 'web-toys-uttt-v1' });
+      this._setupSession(room, false, 'X' /* placeholder; corrected on ready msg */);
+    } catch {
+      this.commit((s) => {
+        s.screen = 'menu';
+        s.settings.mode = 'hotseat';
+        s.connection = null;
+      });
+    }
+  }
+
+  async lobbyCodeChange(code: string): Promise<void> {
+    const conn = this.state.connection;
+    if (!conn?.isHost || this.state.screen !== 'lobby') return;
+    const mySide = conn.mySide;
+    this.session?.destroy();
+    this.session = null;
+    try {
+      const room: Room = await joinNetRoom(code, { appId: 'web-toys-uttt-v1' });
+      this.commit((s) => {
+        if (s.connection) s.connection.roomCode = code;
+      });
+      this._setupSession(room, true, mySide);
+    } catch {
+      // relay unreachable; state keeps old code until user retries
+    }
+  }
+
+  resignOnline(): void {
+    this.session?.sendResign();
+    this.goToMenu();
+  }
+
+  lobbyCancel(): void {
+    this.session?.destroy();
+    this.session = null;
+    this._clearDisconnectTimer();
+    this.commit((s) => {
+      s.screen = 'menu';
+      s.settings.mode = 'hotseat';
+      s.connection = null;
+    });
+  }
+
+  private _setupSession(room: Room, isHost: boolean, hostSide: Player): void {
+    this.session?.destroy();
+    this.session = new MultiplayerSession({
+      room,
+      isHost,
+      hostSide,
+      onStatusChange: (status: PeerStatus) => {
+        this.commit((s) => {
+          if (s.connection) s.connection.status = status;
+        });
+        if (status === 'disconnected') {
+          this._startDisconnectTimer();
+        } else if (status === 'connected') {
+          this._clearDisconnectTimer();
+          this.commit((s) => {
+            s.disconnectedAt = null;
+          });
+        }
+      },
+      onGameStart: (mySide: Player) => {
+        this.commit((s) => {
+          s.screen = 'game';
+          s.history = createHistory(createInitialState());
+          s.aiThinking = false;
+          if (s.connection) s.connection.mySide = mySide;
+        });
+        // If opponent (X) goes first and we're O, start waiting immediately
+        this.maybeSetWaitingForPeer();
+      },
+      onOpponentResign: () => {
+        this.goToMenu();
+      },
+      onRemoteMove: (move) => {
+        const history = this.state.history;
+        if (!history) return;
+        if (!isLegalMove(currentState(history), move)) {
+          this._tearDownOnlineSession();
+          return;
+        }
+        this.applyAndCommit(history, move);
+        this.maybeSetWaitingForPeer();
+      },
+      getHistory: () => {
+        const history = this.state.history;
+        if (!history) return [];
+        return history.entries.map((e) => e.move);
+      },
+    });
+  }
+
+  private maybeSetWaitingForPeer(): void {
+    const { settings, history, screen, connection } = this.state;
+    if (screen !== 'game' || settings.mode !== 'online' || !history || !connection) return;
+    const game = currentState(history);
+    if (game.status.kind !== 'playing') return;
+    if (game.currentPlayer !== connection.mySide) {
+      this.commit((s) => {
+        s.aiThinking = true;
+      });
+    }
+  }
+
+  private _startDisconnectTimer(): void {
+    this._clearDisconnectTimer();
+    this.commit((s) => {
+      s.disconnectedAt = Date.now();
+    });
+    this.disconnectTimer = setTimeout(() => {
+      this.disconnectTimer = null;
+      // Trigger a render so syncOverlay evaluates disconnectedAt and shows the abandon dialog
+      this.commit((_s) => {});
+    }, 30_000);
+  }
+
+  private _clearDisconnectTimer(): void {
+    if (this.disconnectTimer !== null) {
+      clearTimeout(this.disconnectTimer);
+      this.disconnectTimer = null;
+    }
+  }
+
+  private _tearDownOnlineSession(): void {
+    this._clearDisconnectTimer();
+    this.session?.destroy();
+    this.session = null;
   }
 
   playCell(board: GridIndex, cell: GridIndex): void {
@@ -122,11 +315,23 @@ export class GameController {
     ) {
       return;
     }
+    // Online turn guard: block if it's the opponent's turn
+    if (
+      this.state.settings.mode === 'online' &&
+      game.currentPlayer !== this.state.connection?.mySide
+    ) {
+      return;
+    }
     if (!isLegalMove(game, { board, cell })) {
       return; // illegal taps do nothing
     }
     this.applyAndCommit(history, { board, cell });
-    this.maybeDispatchAiTurn();
+    // Send local move to peer (only for local human moves, not remote moves)
+    if (this.state.settings.mode === 'online') {
+      this.session?.sendMove({ board, cell });
+    }
+    this.maybeSetWaitingForPeer();
+    if (this.state.settings.mode !== 'online') this.maybeDispatchAiTurn();
   }
 
   setSetting<K extends keyof Settings>(k: K, v: Settings[K]): void {
@@ -236,6 +441,7 @@ export class GameController {
       ...prev,
       settings: { ...prev.settings },
       scores: { ...prev.scores },
+      connection: prev.connection !== null ? { ...prev.connection } : null,
     };
     mutate(next);
     this.state = next;

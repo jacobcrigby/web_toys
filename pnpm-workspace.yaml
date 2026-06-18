@@ -2,5 +2,8 @@ packages:
   - 'ultimate-tic-tac-toe'
   - 'pdf-to-cbz'
   - 'marblegame'
+  - 'packages/*'
 allowBuilds:
+  '@firebase/util': true
   esbuild: true
+  protobufjs: true
