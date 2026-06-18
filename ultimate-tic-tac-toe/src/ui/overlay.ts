@@ -33,7 +33,7 @@ export function buildOverlay(actions: Actions): HTMLElement {
     'Keep waiting',
   ]) as HTMLButtonElement;
   keepWaitingBtn.addEventListener('click', () => {
-    abandonEl.classList.remove('overlay--open');
+    actions.onKeepWaiting();
   });
   const abandonBtn = h('button', { class: 'btn', type: 'button' }, [
     'Abandon game',
@@ -82,9 +82,5 @@ export function syncOverlay(state: AppState, game: GameState | null, justEnded: 
     }
   }
 
-  const showAbandon =
-    state.screen === 'game' &&
-    state.disconnectedAt !== null &&
-    Date.now() - state.disconnectedAt > 30_000;
-  abandonEl.classList.toggle('overlay--open', showAbandon);
+  abandonEl.classList.toggle('overlay--open', state.screen === 'game' && state.timedOut);
 }

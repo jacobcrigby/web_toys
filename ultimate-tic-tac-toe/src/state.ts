@@ -32,8 +32,10 @@ export interface AppState {
   aiThinking: boolean;
   scores: Scores; // in-memory until Phase 5
   connection: Connection | null;
-  /** ms since epoch when disconnect started; null when connected. Used for 30s timeout. */
+  /** ms since epoch when disconnect started; null when connected. */
   disconnectedAt: number | null;
+  /** true once the 30s disconnect timer fires; drives the abandon-game overlay. */
+  timedOut: boolean;
 }
 
 export function defaultSettings(): Settings {
@@ -49,5 +51,6 @@ export function createAppState(): AppState {
     scores: { x: 0, o: 0, draws: 0 },
     connection: null,
     disconnectedAt: null,
+    timedOut: false,
   };
 }

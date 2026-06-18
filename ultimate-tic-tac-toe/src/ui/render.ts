@@ -26,6 +26,7 @@ export interface Actions {
   onLobbyCopyLink(): void;
   onLobbyCancel(): void;
   onResign(): void;
+  onKeepWaiting(): void;
 }
 
 let statusEl: HTMLElement;
