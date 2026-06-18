@@ -4,7 +4,7 @@ Read AGENTS.md first (rules, conventions, architecture, gotchas). This file is t
 
 ## Current status
 
-- **Phase:** 6 complete — all phases done; project feature-complete per plan
+- **Phase:** 7 complete — online multiplayer added via WebRTC (Trystero + Nostr)
 - **Next task:** none (maintenance only). Outstanding: on-device QA (iOS Safari `100dvh`, VoiceOver/TalkBack) needs physical hardware — headless checks done; revisit `role="application"` fallback only if SR testing shows cell-exploration problems.
 - **Live URL:** https://jacobcrigby.github.io/ultimate-tic-tac-toe/
 

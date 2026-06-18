@@ -6,7 +6,7 @@ Orientation for coding-agent sessions. Read this, then **read PLAN.md and work t
 
 In-browser Ultimate Tic-Tac-Toe. Two modes: two-player hotseat, and single player vs AI (Easy = random + take-the-win, Medium = depth-3 alpha-beta with heuristic eval, Hard = MCTS in a Web Worker, ~1s budget). Vanilla TypeScript + Vite, **no UI framework, zero runtime dependencies**. Vitest for tests, Biome for format+lint. Deployed to GitHub Pages at `https://<owner>.github.io/ultimate-tic-tac-toe/` via GitHub Actions.
 
-Out of scope (do not add): online multiplayer, backend, accounts, i18n, coverage tooling.
+Out of scope (do not add): backend, accounts, i18n, coverage tooling.
 
 ## Commands
 
@@ -36,6 +36,7 @@ src/
     index.ts          #   public API — consumers import ONLY from 'src/engine'
     types.ts lines.ts board.ts rules.ts state.ts history.ts
     __tests__/        #   board/rules/state/history/fullGames tests + fixtures
+  network/            # multiplayer session (protocol.ts, session.ts)
   ai/                 # difficulty strategies
     index.ts types.ts rng.ts tactics.ts easy.ts medium.ts
     mcts.ts           #   pure resumable MCTS core (no worker imports — unit-testable)
