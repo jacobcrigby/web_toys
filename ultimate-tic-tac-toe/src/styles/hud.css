@@ -6,6 +6,32 @@
   min-height: 40px;
 }
 
+.hud__top {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.conn-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.conn-dot--ok   { background: #16a34a; }
+.conn-dot--warn { background: #ca8a04; }
+.conn-dot--bad  { background: #dc2626; }
+
+.conn-banner {
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+  text-align: center;
+  padding: var(--space-1) 0;
+  margin: 0;
+}
+
 .turn-chip {
   display: inline-flex;
   align-items: center;

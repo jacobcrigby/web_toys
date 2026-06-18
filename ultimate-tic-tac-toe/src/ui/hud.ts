@@ -5,6 +5,8 @@ import { h } from './dom.ts';
 let chipEl: HTMLElement;
 let chipTextEl: HTMLElement;
 let chipDotsEl: HTMLElement;
+let connDotEl: HTMLElement;
+let connBannerEl: HTMLElement;
 let scoreXEl: HTMLElement;
 let scoreOEl: HTMLElement;
 let scoreDrawsEl: HTMLElement;
@@ -18,6 +20,13 @@ export function buildHud(): HTMLElement {
   ]);
   chipDotsEl.hidden = true;
   chipEl = h('span', { class: 'turn-chip turn-chip--x' }, [chipTextEl, chipDotsEl]);
+
+  connDotEl = h('span', { class: 'conn-dot', 'aria-hidden': 'true' });
+  connDotEl.hidden = true;
+
+  connBannerEl = h('p', { class: 'conn-banner', role: 'status', 'aria-live': 'polite' }, ['']);
+  connBannerEl.hidden = true;
+
   scoreXEl = h('span', { class: 'scorebar__x' }, ['X 0']);
   scoreOEl = h('span', { class: 'scorebar__o' }, ['0 O']);
   scoreDrawsEl = h('span', {}, ['0 draws']);
@@ -28,7 +37,11 @@ export function buildHud(): HTMLElement {
     '·',
     scoreDrawsEl,
   ]);
-  return h('header', { class: 'hud' }, [chipEl, scorebar]);
+  return h('header', { class: 'hud' }, [
+    h('div', { class: 'hud__top' }, [chipEl, connDotEl]),
+    connBannerEl,
+    scorebar,
+  ]);
 }
 
 export function syncHud(state: AppState, game: GameState | null): void {
@@ -48,4 +61,25 @@ export function syncHud(state: AppState, game: GameState | null): void {
   scoreXEl.textContent = `X ${state.scores.x}`;
   scoreOEl.textContent = `${state.scores.o} O`;
   scoreDrawsEl.textContent = `${state.scores.draws} draws`;
+
+  const conn = state.connection;
+  if (conn && state.screen === 'game') {
+    connDotEl.hidden = false;
+    connDotEl.className = `conn-dot conn-dot--${
+      conn.status === 'connected' ? 'ok' : conn.status === 'disconnected' ? 'bad' : 'warn'
+    }`;
+    if (conn.status === 'disconnected' || conn.status === 'reconnecting') {
+      connBannerEl.hidden = false;
+      connBannerEl.textContent = 'Opponent disconnected — reconnecting…';
+    } else {
+      connBannerEl.hidden = true;
+      connBannerEl.textContent = '';
+    }
+    if (state.aiThinking && conn.status === 'connected') {
+      chipTextEl.textContent = 'Waiting for opponent';
+    }
+  } else {
+    connDotEl.hidden = true;
+    connBannerEl.hidden = true;
+  }
 }
