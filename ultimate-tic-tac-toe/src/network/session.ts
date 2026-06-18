@@ -24,6 +24,7 @@ export class MultiplayerSession {
   private readonly _room: Room;
   private readonly _historySync: HistorySync<Move>;
   private readonly _unsubs: Array<() => void> = [];
+  private _gameStarted = false;
 
   constructor(config: SessionConfig) {
     this._room = config.room;
@@ -42,14 +43,18 @@ export class MultiplayerSession {
       lobbyCh.on((msg) => {
         switch (msg.type) {
           case 'ready': {
-            // Guest: host announced their side
+            // Guest: host announced their side (lobby phase only)
+            if (this._gameStarted) break;
             const mySide: Player = opposite(msg.hostSide);
             lobbyCh.send({ type: 'side-accepted' });
+            this._gameStarted = true;
             config.onGameStart(mySide);
             break;
           }
           case 'side-accepted': {
-            // Host: guest confirmed
+            // Host: guest confirmed (lobby phase only)
+            if (this._gameStarted) break;
+            this._gameStarted = true;
             config.onGameStart(config.hostSide);
             break;
           }
@@ -62,9 +67,12 @@ export class MultiplayerSession {
     );
 
     if (config.isHost) {
+      // Only send 'ready' during lobby; mid-game reconnects are handled by HistorySync
       this._unsubs.push(
         config.room.on('peer-join', () => {
-          lobbyCh.send({ type: 'ready', hostSide: config.hostSide });
+          if (!this._gameStarted) {
+            lobbyCh.send({ type: 'ready', hostSide: config.hostSide });
+          }
         }),
       );
     }

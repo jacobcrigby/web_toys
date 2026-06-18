@@ -23,7 +23,6 @@ export interface Actions {
   onStartOnlineHost(side: Player): void;
   onJoinOnlineGuest(code: string): void;
   onLobbyCodeChange(code: string): void;
-  onLobbyCodeRandomize(): void;
   onLobbyCopyLink(): void;
   onLobbyCancel(): void;
   onResign(): void;

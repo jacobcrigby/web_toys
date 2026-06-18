@@ -66,9 +66,6 @@ export class GameController {
       onLobbyCodeChange: (code) => {
         void this.lobbyCodeChange(code);
       },
-      onLobbyCodeRandomize: () => {
-        void this.startOnlineHost(this.state.connection?.mySide ?? 'X');
-      },
       onLobbyCopyLink: () => {
         const code = this.state.connection?.roomCode;
         if (code) {
@@ -287,8 +284,9 @@ export class GameController {
       s.disconnectedAt = Date.now();
     });
     this.disconnectTimer = setTimeout(() => {
-      // 30s passed — UI will show "Abandon?" overlay via disconnectedAt check
       this.disconnectTimer = null;
+      // Trigger a render so syncOverlay evaluates disconnectedAt and shows the abandon dialog
+      this.commit((_s) => {});
     }, 30_000);
   }
 
