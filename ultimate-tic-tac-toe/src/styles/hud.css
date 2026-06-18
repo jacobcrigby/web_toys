@@ -20,9 +20,15 @@
   flex-shrink: 0;
 }
 
-.conn-dot--ok   { background: #16a34a; }
-.conn-dot--warn { background: #ca8a04; }
-.conn-dot--bad  { background: #dc2626; }
+.conn-dot--ok {
+  background: #16a34a;
+}
+.conn-dot--warn {
+  background: #ca8a04;
+}
+.conn-dot--bad {
+  background: #dc2626;
+}
 
 .conn-banner {
   font-size: 0.8rem;
