@@ -329,7 +329,6 @@ export class GameController {
     ) {
       return;
     }
-    // Online turn guard: block if it's the opponent's turn
     if (
       this.state.settings.mode === 'online' &&
       game.currentPlayer !== this.state.connection?.mySide
