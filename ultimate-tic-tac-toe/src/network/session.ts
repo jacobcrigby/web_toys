@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import type { HistorySync, PeerStatus, Room } from '@web-toys/multiplayer';
+import type { Channel, HistorySync, PeerStatus, Room } from '@web-toys/multiplayer';
 import { createHistorySync } from '@web-toys/multiplayer';
 import type { Move, Player } from '../engine/index.ts';
 import type { LobbyMessage } from './protocol.ts';
@@ -22,14 +22,16 @@ function opposite(p: Player): Player {
 
 export class MultiplayerSession {
   private readonly _room: Room;
+  private readonly _lobbyCh: Channel<LobbyMessage>;
   private readonly _historySync: HistorySync<Move>;
   private readonly _unsubs: Array<() => void> = [];
   private _gameStarted = false;
 
   constructor(config: SessionConfig) {
     this._room = config.room;
+    this._lobbyCh = config.room.channel<LobbyMessage>('lobby');
 
-    const lobbyCh = config.room.channel<LobbyMessage>('lobby');
+    const lobbyCh = this._lobbyCh;
 
     this._historySync = createHistorySync<Move>({
       room: config.room,
@@ -83,8 +85,7 @@ export class MultiplayerSession {
   }
 
   sendResign(): void {
-    const lobbyCh = this._room.channel<LobbyMessage>('lobby');
-    lobbyCh.send({ type: 'resign' });
+    this._lobbyCh.send({ type: 'resign' });
   }
 
   destroy(): void {

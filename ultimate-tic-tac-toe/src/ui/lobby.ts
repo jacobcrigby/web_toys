@@ -9,16 +9,16 @@ let sideBtns: [HTMLButtonElement, HTMLButtonElement];
 let waitingEl: HTMLElement;
 let hostControls: HTMLElement;
 
-let debounceTimer: ReturnType<typeof setTimeout> | undefined;
-
-function fireCodeChange(code: string, actions: Actions): void {
-  clearTimeout(debounceTimer);
-  debounceTimer = setTimeout(() => {
-    actions.onLobbyCodeChange(code);
-  }, 500);
-}
-
 export function buildLobby(actions: Actions): HTMLElement {
+  let debounceTimer: ReturnType<typeof setTimeout> | undefined;
+
+  function fireCodeChange(code: string): void {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      actions.onLobbyCodeChange(code);
+    }, 500);
+  }
+
   codeInput = h('input', {
     class: 'lobby__code-input',
     type: 'text',
@@ -27,7 +27,7 @@ export function buildLobby(actions: Actions): HTMLElement {
     autocomplete: 'off',
   }) as HTMLInputElement;
   codeInput.addEventListener('input', () => {
-    fireCodeChange(codeInput.value.trim(), actions);
+    fireCodeChange(codeInput.value.trim());
   });
 
   const randomizeBtn = h(
@@ -39,6 +39,7 @@ export function buildLobby(actions: Actions): HTMLElement {
     const code = generateCode();
     codeInput.value = code;
     clearTimeout(debounceTimer);
+    debounceTimer = undefined;
     actions.onLobbyCodeChange(code);
   });
 

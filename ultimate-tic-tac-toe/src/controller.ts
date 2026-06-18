@@ -76,6 +76,7 @@ export class GameController {
       },
       onLobbyCancel: () => this.lobbyCancel(),
       onResign: () => this.resignOnline(),
+      onKeepWaiting: () => this.keepWaiting(),
     });
     render(this.state, null);
   }
@@ -137,6 +138,7 @@ export class GameController {
       s.aiThinking = false;
       s.connection = null;
       s.disconnectedAt = null;
+      s.timedOut = false;
     });
   }
 
@@ -213,6 +215,8 @@ export class GameController {
       s.screen = 'menu';
       s.settings.mode = 'hotseat';
       s.connection = null;
+      s.disconnectedAt = null;
+      s.timedOut = false;
     });
   }
 
@@ -223,16 +227,20 @@ export class GameController {
       isHost,
       hostSide,
       onStatusChange: (status: PeerStatus) => {
-        this.commit((s) => {
-          if (s.connection) s.connection.status = status;
-        });
-        if (status === 'disconnected') {
-          this._startDisconnectTimer();
-        } else if (status === 'connected') {
+        if (status === 'connected') {
           this._clearDisconnectTimer();
           this.commit((s) => {
+            if (s.connection) s.connection.status = status;
             s.disconnectedAt = null;
+            s.timedOut = false;
           });
+        } else {
+          this.commit((s) => {
+            if (s.connection) s.connection.status = status;
+          });
+          if (status === 'disconnected') {
+            this._startDisconnectTimer();
+          }
         }
       },
       onGameStart: (mySide: Player) => {
@@ -282,12 +290,18 @@ export class GameController {
     this._clearDisconnectTimer();
     this.commit((s) => {
       s.disconnectedAt = Date.now();
+      s.timedOut = false;
     });
     this.disconnectTimer = setTimeout(() => {
       this.disconnectTimer = null;
-      // Trigger a render so syncOverlay evaluates disconnectedAt and shows the abandon dialog
-      this.commit((_s) => {});
+      this.commit((s) => {
+        s.timedOut = true;
+      });
     }, 30_000);
+  }
+
+  keepWaiting(): void {
+    this._startDisconnectTimer();
   }
 
   private _clearDisconnectTimer(): void {
