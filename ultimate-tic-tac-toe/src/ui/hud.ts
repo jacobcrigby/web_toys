@@ -73,7 +73,6 @@ export function syncHud(state: AppState, game: GameState | null): void {
       connBannerEl.textContent = 'Opponent disconnected — reconnecting…';
     } else {
       connBannerEl.hidden = true;
-      connBannerEl.textContent = '';
     }
     if (state.aiThinking && conn.status === 'connected') {
       chipTextEl.textContent = 'Waiting for opponent';
