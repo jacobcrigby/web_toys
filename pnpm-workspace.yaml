@@ -2,6 +2,7 @@ packages:
   - 'ultimate-tic-tac-toe'
   - 'pdf-to-cbz'
   - 'marblegame'
+  - 'battleship'
   - 'packages/*'
 allowBuilds:
   '@firebase/util': true

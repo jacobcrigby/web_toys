@@ -46,6 +46,7 @@ jobs:
           cp -r microcosm dist/microcosm
           cp -r pdf-to-cbz/dist dist/pdf-to-cbz
           cp -r marblegame/dist dist/marblegame
+          cp -r battleship/dist dist/battleship
 
       - uses: actions/configure-pages@v4
 
