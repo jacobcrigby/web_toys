@@ -14,6 +14,9 @@
     "format": "biome format --write .",
     "lint": "biome check ."
   },
+  "dependencies": {
+    "@web-toys/multiplayer": "workspace:*"
+  },
   "devDependencies": {
     "@biomejs/biome": "^2.4.16",
     "jsdom": "^29.1.1",
