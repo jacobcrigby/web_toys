@@ -1,4 +1,4 @@
-import type { GameState, GridIndex } from '../engine/index.ts';
+import type { GameState, GridIndex, Player } from '../engine/index.ts';
 import type { AppState, Settings } from '../state.ts';
 import { boardLetter, buildMacro, syncBoards } from './board.ts';
 import { h } from './dom.ts';
@@ -18,6 +18,14 @@ export interface Actions {
   onStart(): void;
   onResetScores(): void; // wired Phase 5
   onSetting(k: keyof Settings, v: unknown): void;
+  // Online mode
+  onStartOnlineHost(side: Player): void;
+  onJoinOnlineGuest(code: string): void;
+  onLobbyCodeChange(code: string): void;
+  onLobbyCodeRandomize(): void;
+  onLobbyCopyLink(): void;
+  onLobbyCancel(): void;
+  onResign(): void;
 }
 
 let statusEl: HTMLElement;
