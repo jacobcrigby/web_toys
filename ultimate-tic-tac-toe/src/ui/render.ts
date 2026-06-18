@@ -5,6 +5,7 @@ import { h } from './dom.ts';
 import { buildHistoryStrip, syncHistory } from './history.ts';
 import { buildHud, syncHud } from './hud.ts';
 import { initKeyboard } from './keyboard.ts';
+import { buildLobby, syncLobby } from './lobby.ts';
 import { buildMenu, syncMenu } from './menu.ts';
 import { buildOverlay, syncOverlay } from './overlay.ts';
 
@@ -33,6 +34,7 @@ let newGameBtn: HTMLButtonElement;
 let undoBtn: HTMLButtonElement;
 let muteBtn: HTMLButtonElement;
 let menuScreenEl: HTMLElement;
+let lobbyScreenEl: HTMLElement;
 let gameScreenEl: HTMLElement;
 let lastState: AppState | null = null;
 
@@ -56,6 +58,7 @@ export function mount(root: HTMLElement, actions: Actions): void {
   const historyStrip = buildHistoryStrip();
   gameScreenEl = h('div', { class: 'screen screen--game' }, [hud, macro, controls, historyStrip]);
   menuScreenEl = buildMenu(actions);
+  lobbyScreenEl = buildLobby(actions);
   const overlay = buildOverlay(actions);
   statusEl = h('div', {
     id: 'status',
@@ -63,7 +66,7 @@ export function mount(root: HTMLElement, actions: Actions): void {
     role: 'status',
     'aria-live': 'polite',
   });
-  root.replaceChildren(menuScreenEl, gameScreenEl, overlay, statusEl);
+  root.replaceChildren(menuScreenEl, lobbyScreenEl, gameScreenEl, overlay, statusEl);
   initKeyboard(macro);
 }
 
@@ -138,8 +141,10 @@ export function render(state: AppState, prev: AppState | null): void {
   const game = gameStateOf(state);
   const prevGame = prev ? gameStateOf(prev) : null;
   menuScreenEl.hidden = state.screen !== 'menu';
+  lobbyScreenEl.hidden = state.screen !== 'lobby';
   gameScreenEl.hidden = state.screen !== 'game';
   syncMenu(state);
+  if (state.screen === 'lobby') syncLobby(state);
   const lastMove = state.history?.entries.at(-1)?.move ?? null;
   syncBoards(state, game, prevGame, lastMove);
   syncHud(state, game);
