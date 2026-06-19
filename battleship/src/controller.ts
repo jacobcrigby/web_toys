@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 import type { AiPlayer } from './ai/index.ts';
 import { createAi } from './ai/index.ts';
-import type { GameState, ShipPlacement } from './engine/index.ts';
+import type { Action, GameState, ShipPlacement } from './engine/index.ts';
 import { applyAction, createInitialState, isLegalAction, randomPlacement } from './engine/index.ts';
+import { type BattleshipSession, guestJoin, hostRoom } from './network/session.ts';
 import type { AppState, Settings } from './state.ts';
 import { GRID_CONFIGS } from './state.ts';
 import { loadInitialAppState, saveState } from './storage.ts';
@@ -15,6 +16,8 @@ import {
   setPlacementOrientation,
 } from './ui/render.ts';
 
+const DISCONNECT_ABANDON_MS = 30_000;
+
 export class GameController {
   private root: HTMLElement;
   private state: AppState;
@@ -22,6 +25,10 @@ export class GameController {
   private ai: AiPlayer | null = null;
   private aiAbort: AbortController | null = null;
   private rngSeed: number;
+  private session: BattleshipSession | null = null;
+  private disconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  private opponentShips: ShipPlacement[] | null = null;
+  private ownShips: ShipPlacement[] | null = null;
 
   constructor(root: HTMLElement) {
     this.root = root;
@@ -35,9 +42,13 @@ export class GameController {
   }
 
   init(): void {
-    const actions = this.buildActions();
-    mount(this.root, actions);
+    const urlParams = new URLSearchParams(location.search);
+    const roomCode = urlParams.get('room');
+    mount(this.root, this.buildActions());
     this.commit({});
+    if (roomCode) {
+      void this.startOnlineGuest(roomCode, this.state.settings);
+    }
   }
 
   commit(patch: Partial<AppState>): void {
@@ -56,7 +67,9 @@ export class GameController {
     return {
       menu: {
         onStartVsAi: (settings) => this.startVsAi(settings),
-        onStartOnlineHost: (settings) => this.startOnlinePlaceholder(settings),
+        onStartOnlineHost: (settings) => {
+          void this.startOnlineHost(settings);
+        },
       },
       placement: {
         onConfirmPlacement: (ships) => this.confirmPlacement(ships),
@@ -70,83 +83,51 @@ export class GameController {
           setPlacementHoveredCell(null);
           render(this.state, this.prev, this.buildActions());
         },
-        onCellClick: (cell) => this.placementCellClick(cell),
+        onCellClick: (_cell) => {
+          const progress = this.state.placementProgress;
+          if (!progress || progress.pendingKinds.length > 0) return;
+          this.confirmPlacement(progress.ships);
+        },
       },
       lobby: {
-        onJoinRoom: (_code) => {
-          /* multiplayer phase */
+        onJoinRoom: (code) => {
+          void this.startOnlineGuest(code, this.state.settings);
         },
         onCopyCode: () => {
-          if (this.state.connection?.role === 'host') {
-            void navigator.clipboard.writeText(this.state.connection.roomCode);
+          const conn = this.state.connection;
+          if (conn?.role === 'host') {
+            const url = new URL(location.href);
+            url.searchParams.set('room', conn.roomCode);
+            void navigator.clipboard.writeText(url.toString());
           }
         },
       },
       overlay: {
         onPlayAgain: () => this.playAgain(),
         onReturnToMenu: () => this.returnToMenu(),
-        onResign: () => this.returnToMenu(),
+        onResign: () => {
+          this.session?.sendResign();
+          this.returnToMenu();
+        },
       },
       onFireCell: (cell) => this.fireCell(cell),
     };
   }
 
+  // ── VS AI ──────────────────────────────────────────────────────────────────
+
   private startVsAi(settings: Settings): void {
+    this.teardownOnline();
     this.ai = createAi(settings.aiDifficulty);
     const grid = GRID_CONFIGS[settings.gridSize];
     const humanShips = randomPlacement(grid, () => this.rng());
-
     this.commit({
       settings,
       screen: 'placement',
-      placementProgress: {
-        ships: humanShips,
-        pendingKinds: [],
-        randomized: true,
-      },
+      placementProgress: { ships: humanShips, pendingKinds: [], randomized: true },
       humanPlayerIndex: 0,
       game: null,
     });
-  }
-
-  private startOnlinePlaceholder(settings: Settings): void {
-    // Multiplayer wired in Phase 7 — for now show a placeholder
-    alert('Online multiplayer coming soon!');
-    void settings;
-  }
-
-  private rotatePlacementOrientation(): void {
-    const current = (this.state as AppState & { _orientation?: 'h' | 'v' })._orientation ?? 'h';
-    const next: 'h' | 'v' = current === 'h' ? 'v' : 'h';
-    (this.state as AppState & { _orientation?: 'h' | 'v' })._orientation = next;
-    setPlacementOrientation(next);
-    render(this.state, this.prev, this.buildActions());
-  }
-
-  private randomizePlacement(): void {
-    const grid = GRID_CONFIGS[this.state.settings.gridSize];
-    const ships = randomPlacement(grid, () => this.rng());
-    this.commit({
-      placementProgress: { ships, pendingKinds: [], randomized: true },
-    });
-  }
-
-  private placementCellClick(_cell: number): void {
-    const progress = this.state.placementProgress;
-    if (!progress || progress.pendingKinds.length > 0) return;
-    this.confirmPlacement(progress.ships);
-  }
-
-  private confirmPlacement(humanShips: ShipPlacement[]): void {
-    const grid = GRID_CONFIGS[this.state.settings.gridSize];
-    const aiShips = randomPlacement(grid, () => this.rng());
-    const gameState = createInitialState(
-      this.state.settings.mode,
-      grid,
-      humanShips, // player 0 = human
-      aiShips, // player 1 = AI
-    );
-    this.commit({ screen: 'battle', game: gameState, placementProgress: null });
   }
 
   private maybeDispatchAiTurn(): void {
@@ -168,20 +149,11 @@ export class GameController {
         const currentGame = this.state.game;
         if (!currentGame || currentGame.currentPlayer !== aiPlayerIndex) return;
         const newGame = applyAction(currentGame, action);
-        const shot = action as { cell: number };
-        this.announceShot(newGame, shot.cell, aiPlayerIndex);
+        this.announceShot(newGame, (action as { cell: number }).cell, aiPlayerIndex);
         this.commit({
           game: newGame,
           aiThinking: false,
-          ...(newGame.phase === 'over'
-            ? {
-                screen: 'over',
-                scores:
-                  newGame.winner === 0
-                    ? [this.state.scores[0] + 1, this.state.scores[1]]
-                    : [this.state.scores[0], this.state.scores[1] + 1],
-              }
-            : {}),
+          ...this.overPatch(newGame),
         });
       })
       .catch(() => {
@@ -189,52 +161,208 @@ export class GameController {
       });
   }
 
+  // ── Online host ─────────────────────────────────────────────────────────────
+
+  private async startOnlineHost(settings: Settings): Promise<void> {
+    this.teardownOnline();
+    try {
+      const session = await hostRoom(this.buildSessionCbs());
+      this.session = session;
+      this.commit({
+        settings,
+        screen: 'lobby',
+        humanPlayerIndex: 0,
+        game: null,
+        placementProgress: null,
+        connection: { role: 'host', roomCode: session.roomCode, peerConnected: false },
+      });
+    } catch {
+      this.commit({ screen: 'menu', connection: null });
+    }
+  }
+
+  // ── Online guest ─────────────────────────────────────────────────────────────
+
+  private async startOnlineGuest(code: string, settings: Settings): Promise<void> {
+    this.teardownOnline();
+    this.commit({
+      settings,
+      screen: 'lobby',
+      humanPlayerIndex: 1,
+      game: null,
+      placementProgress: null,
+      connection: { role: 'guest', roomCode: code },
+    });
+    try {
+      const session = await guestJoin(code, this.buildSessionCbs());
+      this.session = session;
+    } catch {
+      this.commit({ screen: 'menu', connection: null });
+    }
+  }
+
+  private buildSessionCbs() {
+    return {
+      onPeerConnected: () => {
+        this.clearDisconnectTimer();
+        const conn = this.state.connection;
+        if (conn?.role === 'host') {
+          this.commit({ connection: { ...conn, peerConnected: true } });
+          const s = this.state.settings;
+          this.session?.sendSettings(s.mode, s.gridSize);
+          this.enterPlacement();
+        }
+      },
+      onSettings: (mode: AppState['settings']['mode'], gridSize: import('./state.ts').GridSize) => {
+        const settings: Settings = { ...this.state.settings, mode, gridSize };
+        this.commit({ settings });
+        this.enterPlacement();
+      },
+      onOpponentPlacement: (ships: ShipPlacement[]) => {
+        this.opponentShips = ships;
+        this.maybeStartOnlineGame();
+      },
+      onOpponentReady: () => {
+        /* not used in this flow */
+      },
+      onOpponentAction: (action: Action) => {
+        const game = this.state.game;
+        if (!game || game.phase !== 'battle') return;
+        const newGame = applyAction(game, action);
+        this.announceShot(newGame, (action as { cell: number }).cell, game.currentPlayer);
+        this.commit({ game: newGame, ...this.overPatch(newGame) });
+      },
+      onOpponentResign: () => {
+        this.clearDisconnectTimer();
+        const humanIdx = this.state.humanPlayerIndex;
+        this.commit({
+          screen: 'over',
+          scores:
+            humanIdx === 0
+              ? [this.state.scores[0] + 1, this.state.scores[1]]
+              : [this.state.scores[0], this.state.scores[1] + 1],
+        });
+      },
+      onDisconnect: () => {
+        if (this.state.screen === 'over' || this.state.screen === 'menu') return;
+        this.commit({ disconnectedAt: Date.now() });
+        this.disconnectTimer = setTimeout(() => {
+          this.returnToMenu();
+        }, DISCONNECT_ABANDON_MS);
+      },
+    };
+  }
+
+  private enterPlacement(): void {
+    const grid = GRID_CONFIGS[this.state.settings.gridSize];
+    const ships = randomPlacement(grid, () => this.rng());
+    this.commit({
+      screen: 'placement',
+      placementProgress: { ships, pendingKinds: [], randomized: true },
+    });
+  }
+
+  private maybeStartOnlineGame(): void {
+    const own = this.ownShips;
+    const opp = this.opponentShips;
+    if (!own || !opp) return;
+    const grid = GRID_CONFIGS[this.state.settings.gridSize];
+    const humanIdx = this.state.humanPlayerIndex;
+    const p0Ships = humanIdx === 0 ? own : opp;
+    const p1Ships = humanIdx === 0 ? opp : own;
+    const game = createInitialState(this.state.settings.mode, grid, p0Ships, p1Ships);
+    this.ownShips = null;
+    this.opponentShips = null;
+    this.commit({ screen: 'battle', game, placementProgress: null });
+  }
+
+  // ── Placement ───────────────────────────────────────────────────────────────
+
+  private rotatePlacementOrientation(): void {
+    const state = this.state as AppState & { _orient?: 'h' | 'v' };
+    const next: 'h' | 'v' = state._orient === 'v' ? 'h' : 'v';
+    state._orient = next;
+    setPlacementOrientation(next);
+    render(this.state, this.prev, this.buildActions());
+  }
+
+  private randomizePlacement(): void {
+    const grid = GRID_CONFIGS[this.state.settings.gridSize];
+    const ships = randomPlacement(grid, () => this.rng());
+    this.commit({ placementProgress: { ships, pendingKinds: [], randomized: true } });
+  }
+
+  private confirmPlacement(humanShips: ShipPlacement[]): void {
+    if (this.state.connection) {
+      // Online: send placement to opponent, wait for theirs
+      this.ownShips = humanShips;
+      this.session?.sendPlacement(humanShips);
+      this.commit({ placementProgress: null });
+      this.maybeStartOnlineGame();
+    } else {
+      // VS AI: generate AI ships and start immediately
+      const grid = GRID_CONFIGS[this.state.settings.gridSize];
+      const aiShips = randomPlacement(grid, () => this.rng());
+      const game = createInitialState(this.state.settings.mode, grid, humanShips, aiShips);
+      this.commit({ screen: 'battle', game, placementProgress: null });
+    }
+  }
+
+  // ── Battle ──────────────────────────────────────────────────────────────────
+
   private fireCell(cell: number): void {
     const game = this.state.game;
     if (!game || game.phase !== 'battle') return;
     if (game.currentPlayer !== this.state.humanPlayerIndex) return;
-    if (!isLegalAction(game, { kind: 'shot', cell }, this.state.humanPlayerIndex).legal) return;
+    const action: Action = { kind: 'shot', cell };
+    if (!isLegalAction(game, action, this.state.humanPlayerIndex).legal) return;
 
-    const newGame = applyAction(game, { kind: 'shot', cell });
+    const newGame = applyAction(game, action);
     this.announceShot(newGame, cell, this.state.humanPlayerIndex);
-
-    this.commit({
-      game: newGame,
-      ...(newGame.phase === 'over'
-        ? {
-            screen: 'over',
-            scores:
-              newGame.winner === this.state.humanPlayerIndex
-                ? [this.state.scores[0] + 1, this.state.scores[1]]
-                : [this.state.scores[0], this.state.scores[1] + 1],
-          }
-        : {}),
-    });
+    this.session?.sendAction(action);
+    this.commit({ game: newGame, ...this.overPatch(newGame) });
   }
 
   private announceShot(game: GameState, cell: number, shooter: 0 | 1): void {
     const targetIdx = shooter === 0 ? 1 : 0;
     const board = game.boards[targetIdx];
     if (!board) return;
-    const isHit = board.shotsReceived.includes(cell);
-    const msg = isHit ? 'Hit!' : 'Miss.';
-    announce(msg);
+    announce(board.shotsReceived.includes(cell) ? 'Hit!' : 'Miss.');
   }
+
+  private overPatch(game: GameState): Partial<AppState> {
+    if (game.phase !== 'over') return {};
+    const humanIdx = this.state.humanPlayerIndex;
+    const humanWon = game.winner === humanIdx;
+    return {
+      screen: 'over',
+      scores: humanWon
+        ? [this.state.scores[0] + 1, this.state.scores[1]]
+        : [this.state.scores[0], this.state.scores[1] + 1],
+    };
+  }
+
+  // ── Post-game ──────────────────────────────────────────────────────────────
 
   private playAgain(): void {
     const { settings, humanPlayerIndex } = this.state;
+    if (this.state.connection) {
+      void this.startOnlineHost(settings);
+      return;
+    }
     this.ai = createAi(settings.aiDifficulty);
     const grid = GRID_CONFIGS[settings.gridSize];
-    const humanShips = randomPlacement(grid, () => this.rng());
+    const ships = randomPlacement(grid, () => this.rng());
     this.commit({
       screen: 'placement',
       game: null,
-      placementProgress: { ships: humanShips, pendingKinds: [], randomized: true },
+      placementProgress: { ships, pendingKinds: [], randomized: true },
       humanPlayerIndex,
     });
   }
 
   private returnToMenu(): void {
+    this.teardownOnline();
     this.ai = null;
     this.aiAbort?.abort();
     this.aiAbort = null;
@@ -246,5 +374,22 @@ export class GameController {
       connection: null,
       disconnectedAt: null,
     });
+  }
+
+  // ── Cleanup ────────────────────────────────────────────────────────────────
+
+  private teardownOnline(): void {
+    this.session?.destroy();
+    this.session = null;
+    this.clearDisconnectTimer();
+    this.ownShips = null;
+    this.opponentShips = null;
+  }
+
+  private clearDisconnectTimer(): void {
+    if (this.disconnectTimer !== null) {
+      clearTimeout(this.disconnectTimer);
+      this.disconnectTimer = null;
+    }
   }
 }
