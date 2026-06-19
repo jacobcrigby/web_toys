@@ -1,0 +1,61 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+.hud {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  padding: var(--space-3) var(--space-6);
+  background: var(--color-ocean-mid);
+  border-bottom: 1px solid var(--color-border);
+  font-size: 0.9rem;
+  color: var(--color-text-dim);
+}
+
+.hud__scores {
+  font-weight: 700;
+  color: var(--color-white);
+  font-size: 1.1rem;
+}
+.hud__turn {
+  flex: 1;
+  text-align: center;
+  font-weight: 600;
+  color: var(--color-accent);
+}
+.hud__grid-label {
+  font-size: 0.8rem;
+}
+
+.app-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-6) var(--space-4);
+  gap: var(--space-8);
+}
+
+/* Battle layout: enemy on top, own on bottom */
+.battle__grid-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  max-width: 480px;
+}
+
+.section-label {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-dim);
+}
+
+@media (min-width: 900px) {
+  .app-main {
+    flex-direction: row;
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: var(--space-8);
+  }
+}
