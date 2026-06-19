@@ -1,0 +1,85 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+.grid-wrapper {
+  width: 100%;
+  max-width: 400px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 10), 1fr);
+  gap: 2px;
+  background: var(--color-ocean-mid);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 2px;
+  aspect-ratio: 1;
+}
+
+.cell {
+  aspect-ratio: 1;
+  border-radius: var(--radius-sm);
+  background: var(--color-ocean-light);
+  transition:
+    background var(--duration-fast) var(--easing-base),
+    transform var(--duration-fast) var(--easing-base);
+  position: relative;
+}
+
+/* Cell states via data-state attribute */
+.cell[data-state="untried"] {
+  background: var(--color-ocean-light);
+}
+.cell[data-state="miss"] {
+  background: var(--color-miss);
+}
+.cell[data-state="hit"] {
+  background: var(--color-hit);
+}
+.cell[data-state="sunk"] {
+  background: var(--color-sunk);
+}
+
+/* Hit and sunk markers (shape, not just color) */
+.cell[data-state="hit"]::after,
+.cell[data-state="sunk"]::after {
+  content: "×";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7em;
+  font-weight: 700;
+  color: var(--color-white);
+  pointer-events: none;
+}
+
+.cell[data-state="miss"]::after {
+  content: "·";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2em;
+  color: var(--color-ocean-mid);
+  pointer-events: none;
+}
+
+/* Hover state for enemy grid */
+.cell:not([disabled]):hover {
+  background: var(--color-accent-dim);
+  transform: scale(1.1);
+  z-index: 1;
+}
+
+/* Placement states */
+.cell[data-state="placed"] {
+  background: var(--color-placed);
+}
+.cell[data-state="preview-valid"] {
+  background: var(--color-preview-ok);
+}
+.cell[data-state="preview-invalid"] {
+  background: var(--color-preview-bad);
+}

@@ -1,0 +1,48 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+:root {
+  /* Colors */
+  --color-ocean: #0a1628;
+  --color-ocean-mid: #122040;
+  --color-ocean-light: #1e3358;
+  --color-accent: #2ea8e6;
+  --color-accent-dim: #1b6fa0;
+  --color-hit: #e03030;
+  --color-hit-light: #f87171;
+  --color-sunk: #991b1b;
+  --color-miss: #94a3b8;
+  --color-ship: #94a3b8;
+  --color-placed: #64748b;
+  --color-preview-ok: rgba(46, 168, 230, 0.4);
+  --color-preview-bad: rgba(224, 48, 48, 0.35);
+  --color-white: #f0f6ff;
+  --color-text: #c8d9f0;
+  --color-text-dim: #7a96bb;
+  --color-border: rgba(255, 255, 255, 0.12);
+  --color-overlay: rgba(0, 0, 0, 0.7);
+
+  /* Spacing */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+
+  /* Radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  /* Motion */
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --easing-base: ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-base: 0ms;
+  }
+}
