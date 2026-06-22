@@ -128,4 +128,69 @@ describe('applyAction — classic shot', () => {
     applyAction(state, { kind: 'shot', cell: 50 });
     expect(JSON.stringify(state)).toBe(before);
   });
+
+  it('initial board has empty revealed array', () => {
+    const state = createInitialState('advanced', G10, fleet0(), fleet1());
+    expect(state.boards[0].revealed).toEqual([]);
+    expect(state.boards[1].revealed).toEqual([]);
+  });
+});
+
+describe('applyAction — sonar does not damage', () => {
+  it('sonar does not add cells to shotsReceived', () => {
+    const state = createInitialState('advanced', G10, fleet0(), fleet1());
+    const next = applyAction(state, { kind: 'sonar', center: 55 }); // center on p1 carrier
+    expect(next.boards[1].shotsReceived).toEqual([]);
+  });
+
+  it('sonar cannot sink a ship', () => {
+    const state = createInitialState('advanced', G10, fleet0(), fleet1());
+    // Sonar at carrier center — should NOT sink it
+    const next = applyAction(state, { kind: 'sonar', center: 52 }); // p1 carrier 50–54
+    expect(next.phase).toBe('battle');
+    expect(next.winner).toBeNull();
+  });
+});
+
+describe('applyAction — recon-scan stores to revealed, not shotsReceived', () => {
+  it('recon-scan adds to revealed but not shotsReceived', () => {
+    const state = createInitialState('advanced', G10, fleet0(), fleet1());
+    // Deploy plane 1 to cell 56 on p1's grid
+    const withPlane = {
+      ...state,
+      recon: [
+        { plane1: { status: 'deployed' as const, cell: 56 }, plane2: state.recon[0].plane2 },
+        state.recon[1],
+      ] as [import('../types.ts').ReconState, import('../types.ts').ReconState],
+    };
+    const next = applyAction(withPlane, { kind: 'recon-scan', planeId: 1, pattern: 1 });
+    // shotsReceived must remain empty — no damage
+    expect(next.boards[1].shotsReceived).toEqual([]);
+    // revealed must contain the scan cells
+    expect(next.boards[1].revealed.length).toBeGreaterThan(0);
+  });
+
+  it('recon-scan cannot win the game', () => {
+    // Place all of p1's ships under the scan area so a naive implementation would sink them
+    const p0 = fleet0();
+    const p1Small: import('../types.ts').ShipPlacement[] = [
+      ship('carrier', 55, 'h'), // 55–59
+      ship('battleship', 60, 'h'), // 60–63
+      ship('destroyer', 70, 'h'), // 70–72
+      ship('submarine', 80, 'h'), // 80–82
+      ship('patrol', 90, 'h'), // 90–91
+    ];
+    const state = createInitialState('advanced', G10, p0, p1Small);
+    // Deploy plane to cell 56 and scan around it
+    const withPlane = {
+      ...state,
+      recon: [
+        { plane1: { status: 'deployed' as const, cell: 56 }, plane2: state.recon[0].plane2 },
+        state.recon[1],
+      ] as [import('../types.ts').ReconState, import('../types.ts').ReconState],
+    };
+    const next = applyAction(withPlane, { kind: 'recon-scan', planeId: 1, pattern: 1 });
+    expect(next.phase).toBe('battle');
+    expect(next.winner).toBeNull();
+  });
 });

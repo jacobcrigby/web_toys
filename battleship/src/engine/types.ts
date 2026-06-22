@@ -14,7 +14,8 @@ export interface ShipPlacement {
 
 export interface PlayerBoard {
   ships: ShipPlacement[];
-  shotsReceived: number[]; // all cells that have been fired upon on this board
+  shotsReceived: number[]; // cells actually fired upon (counts toward ship damage)
+  revealed: number[]; // cells revealed by recon scan (intel only, no damage)
 }
 
 export interface Ammo {

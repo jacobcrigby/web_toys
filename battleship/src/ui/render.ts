@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
+
+import type { Action } from '../engine/index.ts';
 import type { AppState } from '../state.ts';
 import { GRID_CONFIGS } from '../state.ts';
 import { clearEl, h } from './dom.ts';
@@ -13,7 +15,12 @@ import { buildOverlay } from './overlay.ts';
 import type { PlacementActions } from './placement.ts';
 import { buildPlacement } from './placement.ts';
 import type { WeaponPanelActions } from './weapons.ts';
-import { buildWeaponPanel, resetWeaponSelection, syncWeaponPanel } from './weapons.ts';
+import {
+  buildWeaponPanel,
+  getSelectedWeapon,
+  resetWeaponSelection,
+  syncWeaponPanel,
+} from './weapons.ts';
 
 export interface Actions {
   menu: MenuActions;
@@ -21,6 +28,8 @@ export interface Actions {
   lobby: LobbyActions;
   overlay: OverlayActions;
   onFireCell(cell: number): void;
+  onFireOwnCell(cell: number): void;
+  onDirectAction(action: Action): void;
 }
 
 interface MountedRefs {
@@ -118,6 +127,7 @@ export function render(state: AppState, _prev: AppState | null, actions: Actions
 
     const weaponActions: WeaponPanelActions = {
       onWeaponSelect: () => render(state, _prev, actions),
+      onDirectAction: (action) => actions.onDirectAction(action),
     };
 
     if (screenChanged || !_enemyGridWrapper || !_ownGridWrapper) {
@@ -155,12 +165,24 @@ export function render(state: AppState, _prev: AppState | null, actions: Actions
         const cell = Number(btn.dataset.cell);
         actions.onFireCell(cell);
       });
+
+      // Wire cell clicks on own grid (AA gun only)
+      _ownGridWrapper.addEventListener('click', (e) => {
+        if (game.phase !== 'battle' || game.currentPlayer !== humanIdx) return;
+        if (getSelectedWeapon() !== 'aa') return;
+        const btn = (e.target as HTMLElement).closest('[data-cell]') as HTMLElement | null;
+        if (!btn) return;
+        const cell = Number(btn.dataset.cell);
+        actions.onFireOwnCell(cell);
+      });
     }
 
-    // Sync both grids
+    // Sync both grids (pass our recon state for plane icons on enemy grid)
     const enemyBoard = game.boards[enemyIdx];
     const ownBoard = game.boards[humanIdx];
-    if (enemyBoard && _enemyGridWrapper) syncGrid(_enemyGridWrapper, enemyBoard, grid, true);
+    const myRecon = game.recon[humanIdx];
+    if (enemyBoard && _enemyGridWrapper)
+      syncGrid(_enemyGridWrapper, enemyBoard, grid, true, { myRecon });
     if (ownBoard && _ownGridWrapper) syncGrid(_ownGridWrapper, ownBoard, grid, false);
 
     // Sync weapon panel
@@ -172,8 +194,25 @@ export function render(state: AppState, _prev: AppState | null, actions: Actions
     const isHumanTurn = game.phase === 'battle' && game.currentPlayer === humanIdx;
     if (_enemyGridWrapper) {
       _enemyGridWrapper.querySelectorAll<HTMLElement>('.cell').forEach((cell) => {
-        if (!cell.dataset.state || cell.dataset.state === 'untried') {
+        if (
+          !cell.dataset.state ||
+          cell.dataset.state === 'untried' ||
+          cell.dataset.state === 'recon-hit' ||
+          cell.dataset.state === 'recon-miss'
+        ) {
           cell.toggleAttribute('disabled', !isHumanTurn);
+        }
+      });
+    }
+
+    // AA mode: enable own grid cells when AA is selected and it's human's turn
+    if (_ownGridWrapper) {
+      const aaMode = isHumanTurn && game.mode === 'advanced' && getSelectedWeapon() === 'aa';
+      _ownGridWrapper.querySelectorAll<HTMLElement>('.cell').forEach((cell) => {
+        if (aaMode) {
+          cell.removeAttribute('disabled');
+        } else {
+          cell.setAttribute('disabled', '');
         }
       });
     }
