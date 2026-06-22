@@ -149,11 +149,11 @@ export function resolveAction(state: GameState, action: Action): ActionResult {
     };
   }
 
-  // Sonar: 3×3 scan, no hit, reports detection only
+  // Sonar: 3×3 scan, no hit, no board marking — reports detection only
   if (action.kind === 'sonar') {
     const scanCells = squareCells(action.center, 1, grid);
     const detected = scanCells.some((c) => shipAtCell(c, opponentBoard, grid) !== null);
-    return { cellsAttacked: scanCells, cellsHit: [], shipsSunk: [], sonarDetected: detected };
+    return { cellsAttacked: [], cellsHit: [], shipsSunk: [], sonarDetected: detected };
   }
 
   // Recon move: no board interaction
@@ -161,7 +161,7 @@ export function resolveAction(state: GameState, action: Action): ActionResult {
     return { cellsAttacked: [], cellsHit: [], shipsSunk: [] };
   }
 
-  // Recon scan: reveals exact hit/miss for cells around plane
+  // Recon scan: reveals exact hit/miss for cells around plane (stored in board.revealed, not shotsReceived)
   if (action.kind === 'recon-scan') {
     const myRecon = recon[currentPlayer];
     const plane = action.planeId === 1 ? myRecon.plane1 : myRecon.plane2;
@@ -173,7 +173,7 @@ export function resolveAction(state: GameState, action: Action): ActionResult {
       cell: c,
       hit: shipAtCell(c, opponentBoard, grid) !== null,
     }));
-    return { cellsAttacked: scanCells, cellsHit: [], shipsSunk: [], reconFindings: findings };
+    return { cellsAttacked: [], cellsHit: [], shipsSunk: [], reconFindings: findings };
   }
 
   // All offensive actions: compute targeted cells

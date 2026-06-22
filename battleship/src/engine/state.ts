@@ -20,7 +20,7 @@ export class IllegalActionError extends Error {
 }
 
 function makeBoard(ships: ShipPlacement[]): import('./types.ts').PlayerBoard {
-  return { ships, shotsReceived: [] };
+  return { ships, shotsReceived: [], revealed: [] };
 }
 
 export function createInitialState(
@@ -49,12 +49,17 @@ export function applyAction(state: GameState, action: Action): GameState {
   const result = resolveAction(state, action);
   const opp = opponent(state.currentPlayer);
 
-  // Update opponent's board with new shots received
+  // Update opponent's board with new shots received and/or recon-revealed cells
   const opponentBoard = state.boards[opp];
   let newOpponentBoard = opponentBoard;
   if (result.cellsAttacked.length > 0) {
     const newShots = Array.from(new Set([...opponentBoard.shotsReceived, ...result.cellsAttacked]));
-    newOpponentBoard = { ...opponentBoard, shotsReceived: newShots };
+    newOpponentBoard = { ...newOpponentBoard, shotsReceived: newShots };
+  }
+  if (result.reconFindings && result.reconFindings.length > 0) {
+    const newCells = result.reconFindings.map((f) => f.cell);
+    const newRevealed = Array.from(new Set([...newOpponentBoard.revealed, ...newCells]));
+    newOpponentBoard = { ...newOpponentBoard, revealed: newRevealed };
   }
 
   const newBoards: [import('./types.ts').PlayerBoard, import('./types.ts').PlayerBoard] =

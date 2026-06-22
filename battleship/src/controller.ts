@@ -2,7 +2,13 @@
 import type { AiPlayer } from './ai/index.ts';
 import { createAi } from './ai/index.ts';
 import type { Action, GameState, ShipPlacement } from './engine/index.ts';
-import { applyAction, createInitialState, isLegalAction, randomPlacement } from './engine/index.ts';
+import {
+  applyAction,
+  createInitialState,
+  isLegalAction,
+  randomPlacement,
+  resolveAction,
+} from './engine/index.ts';
 import { type BattleshipSession, guestJoin, hostRoom } from './network/session.ts';
 import type { AppState, Settings } from './state.ts';
 import { GRID_CONFIGS } from './state.ts';
@@ -16,6 +22,14 @@ import {
   setPlacementOrientation,
 } from './ui/render.ts';
 import { getSelectedAction, resetWeaponSelection } from './ui/weapons.ts';
+
+const SHIP_NAMES: Record<string, string> = {
+  carrier: 'Carrier',
+  battleship: 'Battleship',
+  destroyer: 'Destroyer',
+  submarine: 'Submarine',
+  patrol: 'Patrol Boat',
+};
 
 const DISCONNECT_ABANDON_MS = 30_000;
 
@@ -112,6 +126,8 @@ export class GameController {
         },
       },
       onFireCell: (cell) => this.fireCell(cell),
+      onFireOwnCell: (cell) => this.fireOwnCell(cell),
+      onDirectAction: (action) => this.fireDirectAction(action),
     };
   }
 
@@ -149,8 +165,8 @@ export class GameController {
         if (abort.signal.aborted) return;
         const currentGame = this.state.game;
         if (!currentGame || currentGame.currentPlayer !== aiPlayerIndex) return;
+        this.announceResult(currentGame, action);
         const newGame = applyAction(currentGame, action);
-        this.announceShot(newGame, (action as { cell: number }).cell, aiPlayerIndex);
         this.commit({
           game: newGame,
           aiThinking: false,
@@ -229,8 +245,8 @@ export class GameController {
       onOpponentAction: (action: Action) => {
         const game = this.state.game;
         if (game?.phase !== 'battle') return;
+        this.announceResult(game, action);
         const newGame = applyAction(game, action);
-        this.announceShot(newGame, (action as { cell: number }).cell, game.currentPlayer);
         this.commit({ game: newGame, ...this.overPatch(newGame) });
       },
       onOpponentResign: () => {
@@ -318,18 +334,91 @@ export class GameController {
     const action = getSelectedAction(cell, game) ?? { kind: 'shot' as const, cell };
     if (!isLegalAction(game, action, this.state.humanPlayerIndex).legal) return;
 
+    this.announceResult(game, action);
     resetWeaponSelection();
     const newGame = applyAction(game, action);
-    this.announceShot(newGame, cell, this.state.humanPlayerIndex);
     this.session?.sendAction(action);
     this.commit({ game: newGame, ...this.overPatch(newGame) });
   }
 
-  private announceShot(game: GameState, cell: number, shooter: 0 | 1): void {
+  private fireOwnCell(cell: number): void {
+    const game = this.state.game;
+    if (game?.phase !== 'battle') return;
+    if (game.currentPlayer !== this.state.humanPlayerIndex) return;
+    const action: Action = { kind: 'anti-aircraft', cell };
+    if (!isLegalAction(game, action, this.state.humanPlayerIndex).legal) return;
+
+    this.announceResult(game, action);
+    resetWeaponSelection();
+    const newGame = applyAction(game, action);
+    this.session?.sendAction(action);
+    this.commit({ game: newGame, ...this.overPatch(newGame) });
+  }
+
+  private fireDirectAction(action: Action): void {
+    const game = this.state.game;
+    if (game?.phase !== 'battle') return;
+    if (game.currentPlayer !== this.state.humanPlayerIndex) return;
+    if (!isLegalAction(game, action, this.state.humanPlayerIndex).legal) return;
+
+    this.announceResult(game, action);
+    resetWeaponSelection();
+    const newGame = applyAction(game, action);
+    this.session?.sendAction(action);
+    this.commit({ game: newGame, ...this.overPatch(newGame) });
+  }
+
+  private announceResult(game: GameState, action: Action): void {
+    const result = resolveAction(game, action);
+    const shooter = game.currentPlayer;
     const targetIdx = shooter === 0 ? 1 : 0;
-    const board = game.boards[targetIdx];
-    if (!board) return;
-    announce(board.shotsReceived.includes(cell) ? 'Hit!' : 'Miss.');
+
+    if (action.kind === 'anti-aircraft') {
+      if (result.planesDestroyed && result.planesDestroyed.length > 0) {
+        announce(`AA hit! Enemy plane ${result.planesDestroyed[0]} shot down!`);
+      } else {
+        announce('AA gun — no plane there.');
+      }
+      return;
+    }
+
+    if (action.kind === 'sonar') {
+      announce(result.sonarDetected ? 'Sonar: Ship detected!' : 'Sonar: Area clear.');
+      return;
+    }
+
+    if (action.kind === 'recon-move') {
+      announce(`Recon plane ${action.planeId} deployed.`);
+      return;
+    }
+
+    if (action.kind === 'recon-scan') {
+      const hits = (result.reconFindings ?? []).filter((f) => f.hit).length;
+      announce(
+        hits > 0 ? `Scan: ${hits} ship cell${hits > 1 ? 's' : ''} found!` : 'Scan: Nothing found.',
+      );
+      return;
+    }
+
+    if (result.shipsSunk.length > 0) {
+      const name = SHIP_NAMES[result.shipsSunk[0] ?? ''] ?? result.shipsSunk[0];
+      announce(`Sunk the ${name}!`);
+      return;
+    }
+    if (result.cellsHit.length > 1) {
+      announce(`${result.cellsHit.length} hits!`);
+      return;
+    }
+    if (result.cellsHit.length === 1) {
+      announce('Hit!');
+      return;
+    }
+
+    // If all cells missed, check if at least the turn was spent on an offensive action
+    const offensiveKinds = new Set(['shot', 'exocet', 'tomahawk', 'apache', 'torpedo']);
+    if (offensiveKinds.has(action.kind)) announce('Miss.');
+
+    void targetIdx; // suppress unused-var — used for context clarity above
   }
 
   private overPatch(game: GameState): Partial<AppState> {

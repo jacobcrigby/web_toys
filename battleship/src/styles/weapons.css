@@ -1,11 +1,17 @@
 /* Weapon panel */
 .weapon-panel {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: var(--space-2);
   padding: var(--space-3) var(--space-4);
   background: var(--color-surface-alt);
   border-top: 1px solid var(--color-border);
+}
+
+.weapon-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
   align-items: center;
 }
 
@@ -39,4 +45,40 @@
   margin-left: var(--space-3);
   border-left: 1px solid var(--color-border);
   padding-left: var(--space-3);
+}
+
+/* Recon planes row */
+.recon-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--color-border);
+}
+
+.recon-section {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.8rem;
+}
+
+.recon-section--destroyed {
+  opacity: 0.4;
+}
+
+.recon-label {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.recon-status {
+  color: var(--color-text-dim, var(--color-text));
+  font-size: 0.75rem;
+}
+
+.btn--sm {
+  font-size: 0.75rem;
+  padding: 2px var(--space-2);
+  min-width: unset;
 }

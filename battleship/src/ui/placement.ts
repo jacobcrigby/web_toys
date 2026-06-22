@@ -104,12 +104,12 @@ export function buildPlacement(
 
   gridEl.addEventListener('mouseover', (e) => {
     const target = (e.target as HTMLElement).closest('[data-cell]') as HTMLElement | null;
-    if (target?.dataset['cell'] !== undefined) actions.onCellHover(Number(target.dataset['cell']));
+    if (target?.dataset.cell !== undefined) actions.onCellHover(Number(target.dataset.cell));
   });
   gridEl.addEventListener('mouseleave', () => actions.onCellLeave());
   gridEl.addEventListener('click', (e) => {
     const target = (e.target as HTMLElement).closest('[data-cell]') as HTMLElement | null;
-    if (target?.dataset['cell'] !== undefined) actions.onCellClick(Number(target.dataset['cell']));
+    if (target?.dataset.cell !== undefined) actions.onCellClick(Number(target.dataset.cell));
   });
 
   gridWrapper.appendChild(gridEl);

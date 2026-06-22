@@ -66,6 +66,54 @@
   pointer-events: none;
 }
 
+/* Recon scan intel (hit/miss revealed without firing) */
+.cell[data-state="recon-hit"] {
+  background: color-mix(in srgb, var(--color-hit) 40%, var(--color-ocean-light));
+  border: 1px dashed var(--color-hit);
+}
+.cell[data-state="recon-miss"] {
+  background: color-mix(in srgb, var(--color-miss) 40%, var(--color-ocean-light));
+  border: 1px dashed var(--color-miss);
+}
+.cell[data-state="recon-hit"]::after {
+  content: "?";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65em;
+  font-weight: 700;
+  color: var(--color-hit);
+  pointer-events: none;
+}
+.cell[data-state="recon-miss"]::after {
+  content: "?";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65em;
+  color: var(--color-miss);
+  pointer-events: none;
+}
+
+/* Recon plane icon on enemy grid */
+.cell[data-plane]::before {
+  content: "✈";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6em;
+  color: var(--color-white);
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+  z-index: 1;
+}
+
 /* Hover state for enemy grid */
 .cell:not([disabled]):hover {
   background: var(--color-accent-dim);
