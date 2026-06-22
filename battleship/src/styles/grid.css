@@ -68,33 +68,33 @@
 
 /* Recon scan intel (hit/miss revealed without firing) */
 .cell[data-state="recon-hit"] {
-  background: color-mix(in srgb, var(--color-hit) 40%, var(--color-ocean-light));
-  border: 1px dashed var(--color-hit);
+  background: color-mix(in srgb, var(--color-accent) 35%, var(--color-ocean-light));
+  border: 1px dashed var(--color-accent);
 }
 .cell[data-state="recon-miss"] {
   background: color-mix(in srgb, var(--color-miss) 40%, var(--color-ocean-light));
   border: 1px dashed var(--color-miss);
 }
 .cell[data-state="recon-hit"]::after {
-  content: "?";
+  content: "·";
   position: absolute;
   inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.65em;
+  font-size: 1.4em;
   font-weight: 700;
-  color: var(--color-hit);
+  color: var(--color-accent);
   pointer-events: none;
 }
 .cell[data-state="recon-miss"]::after {
-  content: "?";
+  content: "·";
   position: absolute;
   inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.65em;
+  font-size: 1.4em;
   color: var(--color-miss);
   pointer-events: none;
 }
