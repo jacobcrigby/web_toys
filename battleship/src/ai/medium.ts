@@ -1,14 +1,17 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import type { GameState } from '../engine/index.ts';
+import type { Action, GameState } from '../engine/index.ts';
 import { cellToRowCol, isShipSunk, legalCells, rowColToCell, shipAtCell } from '../engine/index.ts';
 import type { AiOptions, AiPlayer } from './types.ts';
+import { availableWeapons, bestWeaponAction, computeDensity } from './weapon-utils.ts';
+
+const WEAPON_THRESHOLD = 1.5;
 
 export class MediumAi implements AiPlayer {
-  async chooseAction(state: GameState, playerIndex: 0 | 1, opts: AiOptions) {
+  async chooseAction(state: GameState, playerIndex: 0 | 1, opts: AiOptions): Promise<Action> {
     const opponentIdx = playerIndex === 0 ? 1 : 0;
     const opponentBoard = state.boards[opponentIdx];
-    if (!opponentBoard) return { kind: 'shot' as const, cell: 0 };
+    if (!opponentBoard) return { kind: 'shot', cell: 0 };
 
     const grid = state.grid;
     const shotsReceived = opponentBoard.shotsReceived;
@@ -23,18 +26,18 @@ export class MediumAi implements AiPlayer {
       }
     }
 
+    let shotCell: number;
     if (hitUnsunkCells.length > 0) {
       // Target phase: fire adjacent to hits on unsunk ships
       const candidates: number[] = [];
       for (const hitCell of hitUnsunkCells) {
         const [row, col] = cellToRowCol(hitCell, grid);
-        const neighbors = [
+        for (const [r, c] of [
           [row - 1, col],
           [row + 1, col],
           [row, col - 1],
           [row, col + 1],
-        ] as const;
-        for (const [r, c] of neighbors) {
+        ] as const) {
           if (r >= 0 && r < grid.rows && c >= 0 && c < grid.cols) {
             const candidate = rowColToCell(r, c, grid);
             if (legal.has(candidate)) candidates.push(candidate);
@@ -42,18 +45,33 @@ export class MediumAi implements AiPlayer {
         }
       }
       if (candidates.length > 0) {
-        const pick = candidates[Math.floor(opts.rng() * candidates.length)] ?? candidates[0] ?? 0;
-        return { kind: 'shot' as const, cell: pick };
+        shotCell = candidates[Math.floor(opts.rng() * candidates.length)] ?? candidates[0] ?? 0;
+        // Don't use weapons during hunt — finish the ship
+        return { kind: 'shot', cell: shotCell };
       }
     }
 
-    // Search phase: checkerboard pattern (targets cells where row+col is even)
+    // Search phase: checkerboard pattern
     const checkerboard = [...legal].filter((c) => {
       const [r, col] = cellToRowCol(c, grid);
       return (r + col) % 2 === 0;
     });
     const pool = checkerboard.length > 0 ? checkerboard : [...legal];
-    const cell = pool[Math.floor(opts.rng() * pool.length)] ?? pool[0] ?? 0;
-    return { kind: 'shot' as const, cell };
+    shotCell = pool[Math.floor(opts.rng() * pool.length)] ?? pool[0] ?? 0;
+
+    // Advanced mode: consider weapons
+    if (state.mode === 'advanced') {
+      const weapons = availableWeapons(state, playerIndex);
+      if (weapons.length > 0) {
+        const density = computeDensity(state, playerIndex);
+        const bestShot = density[shotCell] ?? 0;
+        const bestWeapon = bestWeaponAction(weapons, state, density);
+        if (bestWeapon && bestWeapon.score > bestShot * WEAPON_THRESHOLD) {
+          return bestWeapon.action;
+        }
+      }
+    }
+
+    return { kind: 'shot', cell: shotCell };
   }
 }

@@ -1,8 +1,9 @@
 /// <reference lib="webworker" />
 // SPDX-License-Identifier: Apache-2.0
 
-import type { GameState, GridConfig, ShipPlacement } from '../engine/index.ts';
+import type { Action, GameState, GridConfig, ShipPlacement } from '../engine/index.ts';
 import { cellToRowCol, isShipSunk, legalCells, SHIP_SIZES } from '../engine/index.ts';
+import { availableWeapons, bestWeaponAction, weaponScore } from './weapon-utils.ts';
 
 export interface WorkerRequest {
   state: GameState;
@@ -11,34 +12,32 @@ export interface WorkerRequest {
 }
 
 export interface WorkerResponse {
-  cell: number;
+  action: Action;
 }
+
+const WEAPON_THRESHOLD = 2.0;
 
 export function handleRequest(req: WorkerRequest): WorkerResponse {
   const { state, playerIndex, seed } = req;
   const opponentIdx = playerIndex === 0 ? 1 : 0;
   const opponentBoard = state.boards[opponentIdx];
-  if (!opponentBoard) return { cell: 0 };
+  if (!opponentBoard) return { action: { kind: 'shot', cell: 0 } };
 
   const grid = state.grid;
   const legal = legalCells(state, playerIndex);
-  if (legal.length === 0) return { cell: 0 };
+  if (legal.length === 0) return { action: { kind: 'shot', cell: 0 } };
 
   const shotsReceived = opponentBoard.shotsReceived;
   const density = new Float64Array(grid.rows * grid.cols);
 
-  // Determine which ships are still afloat on the opponent's board
   const unsunkShips = opponentBoard.ships.filter((s) => !isShipSunk(s, shotsReceived, grid));
 
-  // Simple LCG for deterministic pseudo-random in the worker
   let rngState = seed | 0;
   const rng = () => {
     rngState = (Math.imul(rngState, 1664525) + 1013904223) | 0;
     return (rngState >>> 0) / 0x100000000;
   };
 
-  // Probability density: for each unsunk ship, enumerate all valid placements
-  // that are consistent with known hits/misses, and increment density at each cell
   for (const ship of unsunkShips) {
     const size = SHIP_SIZES[ship.kind];
     for (let row = 0; row < grid.rows; row++) {
@@ -49,8 +48,6 @@ export function handleRequest(req: WorkerRequest): WorkerResponse {
             origin: row * grid.cols + col,
             orientation,
           };
-          if (!isPlacementConsistent(candidate, shotsReceived, grid, size)) continue;
-          // All cells of this placement must be legal (not already shot)
           const cells = placementCells(candidate, grid, size);
           if (!cells) continue;
           const consistent = cells.every(
@@ -64,17 +61,33 @@ export function handleRequest(req: WorkerRequest): WorkerResponse {
     }
   }
 
-  // Pick the legal cell with highest density
+  // Pick best shot cell
   let bestCell = legal[0] ?? 0;
-  let bestScore = -1;
+  let bestShotScore = -1;
   for (const c of legal) {
     const score = density[c] ?? 0;
-    if (score > bestScore || (score === bestScore && rng() < 0.5)) {
-      bestScore = score;
+    if (score > bestShotScore || (score === bestShotScore && rng() < 0.5)) {
+      bestShotScore = score;
       bestCell = c;
     }
   }
-  return { cell: bestCell };
+
+  // Advanced mode: evaluate weapons
+  if (state.mode === 'advanced') {
+    const weapons = availableWeapons(state, playerIndex);
+    if (weapons.length > 0) {
+      const best = bestWeaponAction(weapons, state, density);
+      if (best && best.score > bestShotScore * WEAPON_THRESHOLD) {
+        // Confirm weapon score is actually better than 2x shot
+        const shotScore = weaponScore({ kind: 'shot', cell: bestCell }, state, density);
+        if (best.score > shotScore * WEAPON_THRESHOLD) {
+          return { action: best.action };
+        }
+      }
+    }
+  }
+
+  return { action: { kind: 'shot', cell: bestCell } };
 }
 
 function placementCells(p: ShipPlacement, grid: GridConfig, size: number): number[] | null {
@@ -89,24 +102,6 @@ function placementCells(p: ShipPlacement, grid: GridConfig, size: number): numbe
   return cells;
 }
 
-function isPlacementConsistent(
-  p: ShipPlacement,
-  shotsReceived: number[],
-  grid: GridConfig,
-  size: number,
-): boolean {
-  const cells = placementCells(p, grid, size);
-  if (!cells) return false;
-  // Each miss must not overlap with this placement
-  for (const missCell of shotsReceived) {
-    if (cells.includes(missCell)) {
-      // If the cell was a miss (no ship there), this placement is inconsistent
-      return true; // We'll check hits separately
-    }
-  }
-  return true;
-}
-
 function isHit(cell: number, ships: ShipPlacement[], grid: GridConfig): boolean {
   for (const ship of ships) {
     const size = SHIP_SIZES[ship.kind];
@@ -116,7 +111,6 @@ function isHit(cell: number, ships: ShipPlacement[], grid: GridConfig): boolean 
   return false;
 }
 
-// Worker message handler — only active when running inside a Web Worker
 if (typeof self !== 'undefined' && 'addEventListener' in self) {
   self.addEventListener('message', (e: MessageEvent<WorkerRequest>) => {
     const result = handleRequest(e.data);
