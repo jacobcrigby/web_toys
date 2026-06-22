@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import type { AiDifficulty } from '../ai/index.ts';
+import type { GameMode } from '../engine/index.ts';
 import type { GridSize, Settings } from '../state.ts';
 import { h } from './dom.ts';
 
@@ -83,13 +84,35 @@ export function buildMenu(settings: Settings, actions: MenuActions): HTMLElement
     'Start Game',
   );
 
+  // Rules selector (classic vs advanced)
+  const rulesGroup = h('div', { class: 'form-group' }, h('label', {}, 'Rules'));
+  const rulesRow = h('div', { class: 'btn-group', role: 'group', 'aria-label': 'Game rules' });
+  for (const [value, label] of [
+    ['classic', 'Classic'],
+    ['advanced', 'Advanced Mission'],
+  ] as const) {
+    const active = value === settings.mode;
+    const btn = h(
+      'button',
+      {
+        class: `btn btn--toggle ${active ? 'btn--active' : ''}`,
+        'data-rules': value,
+        'aria-pressed': active ? 'true' : 'false',
+      },
+      label,
+    );
+    rulesRow.appendChild(btn);
+  }
+  rulesGroup.appendChild(rulesRow);
+
   // State
   let currentMode: 'vsai' | 'online' = 'vsai';
+  let currentRules: GameMode = settings.mode;
   let currentGrid: GridSize = settings.gridSize;
   let currentDiff: AiDifficulty = settings.aiDifficulty;
 
   function updateToggleGroup(group: HTMLElement, activeValue: string, attr: string): void {
-    for (const btn of group.querySelectorAll<HTMLElement>('[data-' + attr + ']')) {
+    for (const btn of group.querySelectorAll<HTMLElement>(`[data-${attr}]`)) {
       const val = btn.dataset[attr];
       const active = val === activeValue;
       btn.classList.toggle('btn--active', active);
@@ -100,31 +123,38 @@ export function buildMenu(settings: Settings, actions: MenuActions): HTMLElement
   modeRow.addEventListener('click', (e) => {
     const btn = (e.target as HTMLElement).closest('[data-mode]') as HTMLElement | null;
     if (!btn) return;
-    currentMode = (btn.dataset['mode'] as 'vsai' | 'online') ?? 'vsai';
+    currentMode = (btn.dataset.mode as 'vsai' | 'online') ?? 'vsai';
     updateToggleGroup(modeRow, currentMode, 'mode');
     diffGroup.style.display = currentMode === 'vsai' ? '' : 'none';
+  });
+
+  rulesRow.addEventListener('click', (e) => {
+    const btn = (e.target as HTMLElement).closest('[data-rules]') as HTMLElement | null;
+    if (!btn) return;
+    currentRules = (btn.dataset.rules as GameMode) ?? 'classic';
+    updateToggleGroup(rulesRow, currentRules, 'rules');
   });
 
   gridRow.addEventListener('click', (e) => {
     const btn = (e.target as HTMLElement).closest('[data-grid]') as HTMLElement | null;
     if (!btn) return;
-    currentGrid = (btn.dataset['grid'] as GridSize) ?? '10x10';
+    currentGrid = (btn.dataset.grid as GridSize) ?? '10x10';
     updateToggleGroup(gridRow, currentGrid, 'grid');
   });
 
   diffRow.addEventListener('click', (e) => {
     const btn = (e.target as HTMLElement).closest('[data-diff]') as HTMLElement | null;
     if (!btn) return;
-    currentDiff = (btn.dataset['diff'] as AiDifficulty) ?? 'medium';
+    currentDiff = (btn.dataset.diff as AiDifficulty) ?? 'medium';
     updateToggleGroup(diffRow, currentDiff, 'diff');
   });
 
   startBtn.addEventListener('click', () => {
-    const s: Settings = { mode: 'classic', gridSize: currentGrid, aiDifficulty: currentDiff };
+    const s: Settings = { mode: currentRules, gridSize: currentGrid, aiDifficulty: currentDiff };
     if (currentMode === 'vsai') actions.onStartVsAi(s);
     else actions.onStartOnlineHost(s);
   });
 
-  section.append(title, modeGroup, gridGroup, diffGroup, startBtn);
+  section.append(title, modeGroup, rulesGroup, gridGroup, diffGroup, startBtn);
   return section;
 }

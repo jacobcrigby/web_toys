@@ -1,0 +1,42 @@
+/* Weapon panel */
+.weapon-panel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface-alt);
+  border-top: 1px solid var(--color-border);
+  align-items: center;
+}
+
+.weapon-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 4.5rem;
+  font-size: 0.75rem;
+  padding: var(--space-1) var(--space-2);
+}
+
+.weapon-btn__name {
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.weapon-btn__ammo {
+  font-size: 0.7rem;
+  opacity: 0.75;
+}
+
+.weapon-btn--disabled {
+  opacity: 0.4;
+}
+
+.pattern-group {
+  display: flex;
+  gap: var(--space-1);
+  margin-left: var(--space-3);
+  border-left: 1px solid var(--color-border);
+  padding-left: var(--space-3);
+}

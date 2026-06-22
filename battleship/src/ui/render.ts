@@ -12,6 +12,8 @@ import type { OverlayActions } from './overlay.ts';
 import { buildOverlay } from './overlay.ts';
 import type { PlacementActions } from './placement.ts';
 import { buildPlacement } from './placement.ts';
+import type { WeaponPanelActions } from './weapons.ts';
+import { buildWeaponPanel, resetWeaponSelection, syncWeaponPanel } from './weapons.ts';
 
 export interface Actions {
   menu: MenuActions;
@@ -31,6 +33,7 @@ let _refs: MountedRefs | null = null;
 let _prevScreen: AppState['screen'] | null = null;
 let _enemyGridWrapper: HTMLElement | null = null;
 let _ownGridWrapper: HTMLElement | null = null;
+let _weaponPanel: HTMLElement | null = null;
 let _placementOrientation: import('../engine/index.ts').Orientation = 'h';
 let _placementHoveredCell: number | null = null;
 
@@ -61,7 +64,6 @@ export function mount(root: HTMLElement, _actions: Actions): void {
 export function announce(msg: string): void {
   if (!_refs) return;
   _refs.ariaLive.textContent = '';
-  // Force re-read by toggling
   requestAnimationFrame(() => {
     if (_refs) _refs.ariaLive.textContent = msg;
   });
@@ -80,6 +82,8 @@ export function render(state: AppState, _prev: AppState | null, actions: Actions
     clearEl(main);
     _enemyGridWrapper = null;
     _ownGridWrapper = null;
+    _weaponPanel = null;
+    resetWeaponSelection();
     main.appendChild(buildMenu(state.settings, actions.menu));
     return;
   }
@@ -112,6 +116,10 @@ export function render(state: AppState, _prev: AppState | null, actions: Actions
     const humanIdx = state.humanPlayerIndex;
     const enemyIdx = humanIdx === 0 ? 1 : 0;
 
+    const weaponActions: WeaponPanelActions = {
+      onWeaponSelect: () => render(state, _prev, actions),
+    };
+
     if (screenChanged || !_enemyGridWrapper || !_ownGridWrapper) {
       clearEl(main);
 
@@ -134,12 +142,18 @@ export function render(state: AppState, _prev: AppState | null, actions: Actions
       main.appendChild(enemySection);
       main.appendChild(ownSection);
 
+      if (game.mode === 'advanced') {
+        _weaponPanel = buildWeaponPanel(game, humanIdx, weaponActions);
+        main.appendChild(_weaponPanel);
+      }
+
       // Wire cell clicks on enemy grid
       _enemyGridWrapper.addEventListener('click', (e) => {
         if (game.phase !== 'battle' || game.currentPlayer !== humanIdx) return;
         const btn = (e.target as HTMLElement).closest('[data-cell]') as HTMLElement | null;
         if (!btn || btn.hasAttribute('disabled')) return;
-        actions.onFireCell(Number(btn.dataset['cell']));
+        const cell = Number(btn.dataset.cell);
+        actions.onFireCell(cell);
       });
     }
 
@@ -149,11 +163,16 @@ export function render(state: AppState, _prev: AppState | null, actions: Actions
     if (enemyBoard && _enemyGridWrapper) syncGrid(_enemyGridWrapper, enemyBoard, grid, true);
     if (ownBoard && _ownGridWrapper) syncGrid(_ownGridWrapper, ownBoard, grid, false);
 
+    // Sync weapon panel
+    if (_weaponPanel && game.mode === 'advanced') {
+      syncWeaponPanel(_weaponPanel, game, humanIdx, weaponActions);
+    }
+
     // Enable/disable firing based on game state
     const isHumanTurn = game.phase === 'battle' && game.currentPlayer === humanIdx;
     if (_enemyGridWrapper) {
       _enemyGridWrapper.querySelectorAll<HTMLElement>('.cell').forEach((cell) => {
-        if (!cell.dataset['state'] || cell.dataset['state'] === 'untried') {
+        if (!cell.dataset.state || cell.dataset.state === 'untried') {
           cell.toggleAttribute('disabled', !isHumanTurn);
         }
       });

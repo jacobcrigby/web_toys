@@ -15,6 +15,7 @@ import {
   setPlacementHoveredCell,
   setPlacementOrientation,
 } from './ui/render.ts';
+import { getSelectedAction, resetWeaponSelection } from './ui/weapons.ts';
 
 const DISCONNECT_ABANDON_MS = 30_000;
 
@@ -132,7 +133,7 @@ export class GameController {
 
   private maybeDispatchAiTurn(): void {
     const game = this.state.game;
-    if (!game || game.phase !== 'battle') return;
+    if (game?.phase !== 'battle') return;
     if (game.currentPlayer === this.state.humanPlayerIndex) return;
     if (!this.ai) return;
 
@@ -227,7 +228,7 @@ export class GameController {
       },
       onOpponentAction: (action: Action) => {
         const game = this.state.game;
-        if (!game || game.phase !== 'battle') return;
+        if (game?.phase !== 'battle') return;
         const newGame = applyAction(game, action);
         this.announceShot(newGame, (action as { cell: number }).cell, game.currentPlayer);
         this.commit({ game: newGame, ...this.overPatch(newGame) });
@@ -312,11 +313,12 @@ export class GameController {
 
   private fireCell(cell: number): void {
     const game = this.state.game;
-    if (!game || game.phase !== 'battle') return;
+    if (game?.phase !== 'battle') return;
     if (game.currentPlayer !== this.state.humanPlayerIndex) return;
-    const action: Action = { kind: 'shot', cell };
+    const action = getSelectedAction(cell, game) ?? { kind: 'shot' as const, cell };
     if (!isLegalAction(game, action, this.state.humanPlayerIndex).legal) return;
 
+    resetWeaponSelection();
     const newGame = applyAction(game, action);
     this.announceShot(newGame, cell, this.state.humanPlayerIndex);
     this.session?.sendAction(action);
