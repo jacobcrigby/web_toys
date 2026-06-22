@@ -38,8 +38,11 @@ describe('Hard AI worker (handleRequest)', () => {
     const { p0, p1 } = fleets();
     const state = createInitialState('classic', G10, p0, p1);
     const result = handleRequest({ state, playerIndex: 0, seed: 42 });
-    expect(result.cell).toBeGreaterThanOrEqual(0);
-    expect(result.cell).toBeLessThan(100);
+    expect(result.action.kind).toBe('shot');
+    if (result.action.kind === 'shot') {
+      expect(result.action.cell).toBeGreaterThanOrEqual(0);
+      expect(result.action.cell).toBeLessThan(100);
+    }
   });
 
   it('never picks an already-shot cell', () => {
@@ -54,7 +57,8 @@ describe('Hard AI worker (handleRequest)', () => {
       ],
     };
     const result = handleRequest({ state, playerIndex: 0, seed: 99 });
-    expect(result.cell).toBe(99);
+    expect(result.action.kind).toBe('shot');
+    if (result.action.kind === 'shot') expect(result.action.cell).toBe(99);
   });
 
   it('returns within time budget (< 500ms)', () => {
@@ -80,7 +84,10 @@ describe('Hard AI worker (handleRequest)', () => {
     const result = handleRequest({ state, playerIndex: 0, seed: 13 });
     // Should target somewhere near the carrier (cells 51–90 area at minimum)
     // At least not picking random distant cell consistently
-    expect(result.cell).toBeGreaterThanOrEqual(0);
-    expect(result.cell).toBeLessThan(100);
+    expect(result.action.kind).toBe('shot');
+    if (result.action.kind === 'shot') {
+      expect(result.action.cell).toBeGreaterThanOrEqual(0);
+      expect(result.action.cell).toBeLessThan(100);
+    }
   });
 });

@@ -27,7 +27,7 @@ export class HardAi implements AiPlayer {
     ]);
 
     if (workerResult !== null) {
-      return { kind: 'shot' as const, cell: workerResult.cell };
+      return workerResult.action;
     }
 
     // Fallback to Medium AI on timeout
