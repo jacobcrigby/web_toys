@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Open Sauce 2026 — My Schedule</title>
+  <meta name="description" content="Personal schedule planner for Open Sauce 2026. Star the sessions you'll attend, filter by creator and stage, and export to your calendar." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%23111111'/><text x='50' y='72' font-size='60' text-anchor='middle'>🥫</text></svg>" />
+  <style>
+    :root {
+      --bg: #0e0e10;
+      --panel: #17171b;
+      --panel-2: #1e1e24;
+      --line: rgba(255,255,255,0.10);
+      --line-strong: rgba(255,255,255,0.18);
+      --text: #f4f2ee;
+      --muted: #a5a2ad;
+      --faint: #77747f;
+      --sauce: #ff5636;
+      --sauce-dim: rgba(255,86,54,0.14);
+      --gold: #ffc94d;
+      --star: #ffc94d;
+      --radius: 16px;
+      --maxw: 940px;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+    .heading { font-weight: 800; letter-spacing: -0.02em; text-transform: uppercase; }
+    a { color: var(--sauce); }
+
+    /* ---- Header ---- */
+    header.top {
+      position: sticky; top: 0; z-index: 30;
+      background: rgba(14,14,16,0.86);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--line);
+    }
+    .top-inner {
+      max-width: var(--maxw); margin: 0 auto;
+      padding: 14px 18px;
+      display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    }
+    .brand { display: flex; align-items: baseline; gap: 10px; flex: 1; min-width: 0; }
+    .brand h1 {
+      font-size: clamp(1.15rem, 3.5vw, 1.6rem); margin: 0;
+      font-weight: 800; letter-spacing: -0.02em; text-transform: uppercase;
+    }
+    .brand .tag { color: var(--muted); font-size: 0.8rem; white-space: nowrap; }
+    .top-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .btn {
+      font: inherit; font-weight: 600; font-size: 0.85rem;
+      color: var(--text); background: var(--panel-2);
+      border: 1px solid var(--line-strong); border-radius: 999px;
+      padding: 7px 14px; cursor: pointer; white-space: nowrap;
+      display: inline-flex; align-items: center; gap: 7px;
+      transition: background .15s, border-color .15s, color .15s;
+    }
+    .btn:hover { background: #2a2a32; }
+    .btn.primary { background: var(--sauce); border-color: var(--sauce); color: #180a06; }
+    .btn.primary:hover { filter: brightness(1.07); }
+    .btn.active { background: var(--sauce); border-color: var(--sauce); color: #180a06; }
+    .btn .count { font-variant-numeric: tabular-nums; }
+    .btn[disabled] { opacity: .45; cursor: not-allowed; }
+
+    main { max-width: var(--maxw); margin: 0 auto; padding: 18px; }
+
+    /* ---- Controls ---- */
+    .controls { display: flex; flex-direction: column; gap: 14px; margin-bottom: 8px; }
+    .search-wrap { position: relative; }
+    .search-wrap svg { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); width: 17px; height: 17px; color: var(--faint); pointer-events: none; }
+    input[type="search"] {
+      width: 100%; font: inherit; color: var(--text);
+      background: var(--panel); border: 1px solid var(--line-strong);
+      border-radius: 12px; padding: 11px 14px 11px 40px;
+    }
+    input[type="search"]:focus { outline: none; border-color: var(--sauce); }
+    input[type="search"]::placeholder { color: var(--faint); }
+
+    .filter-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .filter-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.14em; color: var(--faint); margin-right: 2px; align-self: center; }
+    .chip {
+      font: inherit; font-size: 0.82rem; font-weight: 600;
+      color: var(--muted); background: var(--panel);
+      border: 1px solid var(--line); border-radius: 999px;
+      padding: 6px 13px; cursor: pointer; white-space: nowrap;
+      display: inline-flex; align-items: center; gap: 6px;
+      transition: background .13s, color .13s, border-color .13s;
+    }
+    .chip:hover { color: var(--text); border-color: var(--line-strong); }
+    .chip.on { background: #fff; color: #111; border-color: #fff; }
+    .chip.creator.on { background: var(--sauce); border-color: var(--sauce); color: #180a06; }
+    .chip .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--sauce); }
+    .chip .n { color: var(--faint); font-weight: 600; }
+    .chip.on .n { color: rgba(0,0,0,0.5); }
+
+    select {
+      font: inherit; font-size: 0.82rem; font-weight: 600; color: var(--text);
+      background: var(--panel); border: 1px solid var(--line); border-radius: 999px;
+      padding: 6px 30px 6px 13px; cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a5a2ad' stroke-width='3'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 11px center;
+    }
+    select:focus { outline: none; border-color: var(--sauce); }
+
+    .toolbar { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .result-count { color: var(--muted); font-size: 0.85rem; }
+    .link-btn { background: none; border: none; color: var(--sauce); font: inherit; font-size: 0.82rem; font-weight: 600; cursor: pointer; padding: 0; }
+    .link-btn:hover { text-decoration: underline; }
+
+    /* ---- Day sections ---- */
+    .day-head {
+      display: flex; align-items: baseline; gap: 12px;
+      margin: 26px 0 4px; padding-bottom: 10px;
+      border-bottom: 2px solid var(--line-strong);
+    }
+    .day-head h2 { margin: 0; font-size: 1.5rem; font-weight: 800; text-transform: uppercase; letter-spacing: -0.02em; }
+    .day-head .date { color: var(--muted); font-size: 0.85rem; font-family: ui-monospace, "SF Mono", Menlo, monospace; text-transform: uppercase; letter-spacing: 0.08em; }
+    .day-head .day-n { margin-left: auto; color: var(--faint); font-size: 0.8rem; }
+
+    /* ---- Session card ---- */
+    .card {
+      display: grid; grid-template-columns: 92px 1fr auto;
+      gap: 16px; align-items: start;
+      padding: 16px 4px; border-bottom: 1px solid var(--line);
+    }
+    .card.mine { background: linear-gradient(90deg, var(--sauce-dim), transparent 60%); border-radius: 12px; }
+    .card .when { text-align: left; }
+    .card .time { font-weight: 800; font-size: 1.02rem; letter-spacing: -0.01em; white-space: nowrap; }
+    .card .endtime { color: var(--faint); font-size: 0.78rem; white-space: nowrap; }
+    .stage-badge {
+      display: inline-block; margin-top: 8px;
+      font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
+      color: var(--muted); background: var(--panel-2);
+      border: 1px solid var(--line); border-radius: 6px; padding: 3px 6px;
+    }
+    .stage-badge.outdoor { color: #9fd8a0; border-color: rgba(159,216,160,0.3); }
+    .card .body { min-width: 0; }
+    .card h3 { margin: 0; font-size: 1.12rem; font-weight: 700; letter-spacing: -0.01em; line-height: 1.28; }
+    .card .desc { margin: 6px 0 0; color: var(--muted); font-size: 0.9rem; }
+    .people { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .person {
+      font-size: 0.75rem; font-weight: 600; color: var(--muted);
+      background: var(--panel-2); border: 1px solid var(--line);
+      border-radius: 999px; padding: 2px 9px;
+    }
+    .person.feat { color: #180a06; background: var(--sauce); border-color: var(--sauce); }
+    .star {
+      background: none; border: 1px solid var(--line-strong); border-radius: 10px;
+      width: 40px; height: 40px; cursor: pointer; color: var(--faint);
+      display: flex; align-items: center; justify-content: center;
+      transition: color .13s, border-color .13s, background .13s;
+      flex-shrink: 0;
+    }
+    .star:hover { color: var(--star); border-color: var(--star); }
+    .star svg { width: 20px; height: 20px; }
+    .star.on { color: var(--star); border-color: var(--star); background: rgba(255,201,77,0.12); }
+
+    .empty { text-align: center; color: var(--muted); padding: 60px 20px; }
+    .empty .big { font-size: 2.4rem; margin-bottom: 8px; }
+
+    footer {
+      max-width: var(--maxw); margin: 30px auto 0; padding: 22px 18px 40px;
+      border-top: 1px solid var(--line); color: var(--faint); font-size: 0.8rem;
+      display: flex; gap: 8px; flex-wrap: wrap; justify-content: space-between;
+    }
+    footer a { color: var(--muted); }
+
+    @media (max-width: 640px) {
+      .card { grid-template-columns: 74px 1fr; grid-template-areas: "when body" "star star"; }
+      .card .when { grid-area: when; }
+      .card .body { grid-area: body; }
+      .card .star { grid-area: star; width: 100%; height: 36px; margin-top: 4px; gap: 8px; }
+      .card .star::after { content: attr(data-label); font-size: 0.8rem; font-weight: 600; }
+    }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div class="top-inner">
+      <div class="brand">
+        <h1>🥫 Open Sauce 2026</h1>
+        <span class="tag">Schedule planner</span>
+      </div>
+      <div class="top-actions">
+        <button class="btn" id="mineToggle" title="Show only sessions you've starred">
+          ★ My Schedule <span class="count" id="mineCount">0</span>
+        </button>
+        <button class="btn primary" id="exportBtn" title="Download your starred sessions as a calendar file">Export .ics</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="controls">
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input type="search" id="search" placeholder="Search titles, descriptions, people…" autocomplete="off" />
+      </div>
+
+      <div class="filter-row" id="featuredRow">
+        <span class="filter-label">Featured</span>
+        <!-- creator chips injected -->
+        <button class="link-btn" id="clearCreators" style="margin-left:4px">clear</button>
+      </div>
+
+      <div class="filter-row">
+        <span class="filter-label">Day</span>
+        <button class="chip on" data-day="all">All</button>
+        <button class="chip" data-day="Fri">Friday</button>
+        <button class="chip" data-day="Sat">Saturday</button>
+        <button class="chip" data-day="Sun">Sunday</button>
+        <select id="stageSel" aria-label="Filter by stage" style="margin-left:8px"></select>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <span class="result-count" id="resultCount"></span>
+      <button class="link-btn" id="resetAll">Reset filters</button>
+    </div>
+
+    <div id="list"></div>
+  </main>
+
+  <footer>
+    <span>Not affiliated with Open Sauce. Times shown in Pacific (PT). Data pulled from the official <a href="https://www.opensauce.com/agenda" target="_blank" rel="noopener">agenda</a>.</span>
+    <span><a href="../">← Web Toys</a></span>
+  </footer>
+
+  <script>
+  // SPDX-License-Identifier: Apache-2.0
+  "use strict";
+
+  const SESSIONS = [{"id":"recNYewvy3RVPRiHu","day":"Fri","dayName":"Friday","date":"2026-07-17","min":510,"startLocal":"2026-07-17T08:30:00","endLocal":null,"time":"8:30 AM","endTime":null,"stage":"","title":"Industry Day Registration Opens","desc":"","people":[]},{"id":"recxIse5Bdhfcx3FU","day":"Fri","dayName":"Friday","date":"2026-07-17","min":570,"startLocal":"2026-07-17T09:30:00","endLocal":"2026-07-17T10:00:00","time":"9:30 AM","endTime":"10:00 AM","stage":"Main Stage","title":"Reinventing the Creator / Production Stack","desc":"Video won the podcasting format debate. The question now is who builds the infrastructure for video production, including podcasting, clips and long-form. This session brings together two founders who saw the shift early and are shipping the tools: Paul Robert Cary of StarZero, whose AI handles video search, editing, and intelligent clip extraction at scale, and Rox Codes of Flightcast, building video podcasting production infrastructure alongside Steven Bartlett. This conversation explores where AI adds real benefit, where it breaks and what's next.  Learn about tools that harness AI to help humans, creating content without a broadcast budget, the HLS / RSS debate for video podcasting, and how intelligent clipping beats lazy clip-farms in both speed and quality.\n\n","people":["Rox Codes","Paul Robert Cary","Jean Kang"]},{"id":"recaA4SHThcIqGwEs","day":"Fri","dayName":"Friday","date":"2026-07-17","min":600,"startLocal":"2026-07-17T10:00:00","endLocal":"2026-07-17T10:30:00","time":"10:00 AM","endTime":"10:30 AM","stage":"Main Stage","title":"How to Keep AI From Crushing Your Hopes and Dreams","desc":"With a billion new \"creators\" coming online via AI, how do you compete? This session offers a survival guide for creators, producers and media execs.  Learn how to thrive in the age of digital twins, synthetic creators, and the slop tsunami without losing your soul... or your revshare.","people":["Luke Lafreniere","Jabrils","Avni Barman","Matt Wolfe","Leslie Morgan"]},{"id":"rec0xo2iKRb3lGCIJ","day":"Fri","dayName":"Friday","date":"2026-07-17","min":630,"startLocal":"2026-07-17T10:30:00","endLocal":"2026-07-17T11:00:00","time":"10:30 AM","endTime":"11:00 AM","stage":"Main Stage","title":"Where the Weird Things Are","desc":"An exploration of weird and wild deep tech. From biological hacking and orbital data centers to the frontiers of physical machines, this session looks at tech that will soon move from theoretical to practical.  Discover where engineering and biology are headed and what the next breakthroughs will mean for builders, makers and creators.","people":["Liz Dorman","Rob DeMillo","Hugo Amsellem","Berit Anderson"]},{"id":"recp2Epezd3ovGNjX","day":"Fri","dayName":"Friday","date":"2026-07-17","min":660,"startLocal":"2026-07-17T11:00:00","endLocal":"2026-07-17T11:30:00","time":"11:00 AM","endTime":"11:30 AM","stage":"Main Stage","title":"Monetizing Nerd Culture","desc":"This session showcases how creators are turning expertise and community into repeatable algorithm-free revenue, including memberships, premium community, courses and cohorts, CAD files and toolkits, brand partnerships, and creator-led products. Learn how to package, price and retain fans and unexpected ways to expand beyond revshare.","people":["Unnecessary Inventions","Sara Renea Clarke","Jason Sew Hoy","Zach Ferraro"]},{"id":"recRwh0nR8glFQmBc","day":"Fri","dayName":"Friday","date":"2026-07-17","min":690,"startLocal":"2026-07-17T11:30:00","endLocal":"2026-07-17T12:00:00","time":"11:30 AM","endTime":"12:00 PM","stage":"Main Stage","title":"AMA - The YouTube Algorithm 2026","desc":"YouTube's creator liaison and editor Rene Ritchie and YouTube product manager Todd Beaupre know more about building success on YouTube than just about anyone else.  In this AMA they will answer YOUR burning questions about YouTube, the algorithm, success on the platform, why the algorithm doesn't hate you, numbers to pay attention to, and much more!","people":["Todd Beaupré","Rene Ritchie","Jim Louderback"]},{"id":"reci5VgTUOCeQdMGJ","day":"Fri","dayName":"Friday","date":"2026-07-17","min":720,"startLocal":"2026-07-17T12:00:00","endLocal":"2026-07-17T13:00:00","time":"12:00 PM","endTime":"1:00 PM","stage":"","title":"Networking Lunch Friday","desc":"","people":[]},{"id":"reczDpgeYmeFpEX2p","day":"Fri","dayName":"Friday","date":"2026-07-17","min":780,"startLocal":"2026-07-17T13:00:00","endLocal":"2026-07-17T13:30:00","time":"1:00 PM","endTime":"1:30 PM","stage":"Industry Breakout Room 1","title":"Build Your Own Brain: How to Build and Run AI Models Locally","desc":"Privacy, control, and agency are the defining pillars of the next wave of AI. From hybrid systems like OpenClaw and Claude Code to fully offline models, this session explores how to deploy AI partially or entirely on your own hardware.\n\nWe will break down the current state of the art and project where the price-to-performance curve is heading. You will discover exactly which local hardware delivers the best return on investment, covering memory thresholds, CPU vs. GPU trade-offs, and cost-efficient scaling strategies. Finally, we will share actionable blueprints for securely ingesting proprietary data into your local AI environment, orchestrating autonomous local agents, and locking down your infrastructure from prying eyes.","people":["Liam Broza","Delia Lazarescu","John Canning"]},{"id":"rectU4LrubhwZu8vA","day":"Fri","dayName":"Friday","date":"2026-07-17","min":780,"startLocal":"2026-07-17T13:00:00","endLocal":"2026-07-17T13:30:00","time":"1:00 PM","endTime":"1:30 PM","stage":"Industry Breakout Room 2","title":"Building a Nimble Studio for Creators","desc":"The lone genius creator is becoming a small studio with a lab, a pipeline, and a product roadmap. This session provides hands-on advice for creators to help them build a cinematic hardware and software stack without spending a fortune and how to hire an effective team of production experts when needed.  Learn how to optimize for creativity while digging a protective moat, preserving your humanity and scaling production without losing that weird spark that made you watchable. ","people":["NileRed","Corey Braun","Pojo Riegert","Bridget Haggerty","Renee Teeley"]},{"id":"recoXG6myYdjnB1Vo","day":"Fri","dayName":"Friday","date":"2026-07-17","min":780,"startLocal":"2026-07-17T13:00:00","endLocal":"2026-07-17T13:25:00","time":"1:00 PM","endTime":"1:25 PM","stage":"Main Stage","title":"LinkedIn Is Not What You Think","desc":"Most people still treat LinkedIn like a digital resume. That's a mistake. This fireside chat with Sam Corrao Clanon, who runs creator products at LinkedIn, covers what the platform actually is now: a publishing engine where the right creator or executive can build an audience that converts. If you're a creator who wants to think like a CEO, build real revenue, and eventually sell your channel or your products, LinkedIn is the place to be. We'll discuss what good LinkedIn content looks like in 2026, the formulaic posts dominating so many feeds, and what's coming on the product and monetization side. Whether you're a solo creator, an executive trying to build a personal brand, or a company figuring out how to show up without sounding like a press release, this one's for you.","people":["Sam Corrao Clanon","Jim Louderback"]},{"id":"rec66AEd1PvVIqjSx","day":"Fri","dayName":"Friday","date":"2026-07-17","min":805,"startLocal":"2026-07-17T13:25:00","endLocal":"2026-07-17T14:00:00","time":"1:25 PM","endTime":"2:00 PM","stage":"Main Stage","title":"Creators on the Cap Table","desc":"The next power move is equity: creators as founders, owners, investors, and co-builders. This session demystifies deal structures, risk, control, and how not to get dazzled into signing away your future for a short-term bag.  Whether via acquisition, alignment or building together, this session identifies how to find co-founders, who's buying, and the best path to sustainable wealth.","people":["Megan Lightcap","Criswell Fiordalis","Tyler Chou","Jeff Frommer","Patrick Walker"]},{"id":"recKM9IDC13Qy1iLD","day":"Fri","dayName":"Friday","date":"2026-07-17","min":810,"startLocal":"2026-07-17T13:30:00","endLocal":"2026-07-17T14:00:00","time":"1:30 PM","endTime":"2:00 PM","stage":"Industry Breakout Room 1","title":"How to Stop Being Invisible to AI Search","desc":"More than half of Google searches now end without a click, and ChatGPT, Perplexity, and Google AI Overviews are answering the question before anyone reaches your site, video, or brand. Those systems pull from a small pool of trusted sources, and you're probably not there. This session covers what Generative Engine Optimization (GEO) is, why it's already costing you today, and what content, technical, and distribution changes you need to do now to move the needle. Then we go one step further.  Within 18 months, AI agents will complete purchases, book services, and curate media on behalf of your customers and community.  And without machine-readable authority, you will be invisible. Leave with a practical diagnostic framework and an action list you can put in place today.","people":["Cindy Prince Baum"]},{"id":"receSCsmtJsfuOUZT","day":"Fri","dayName":"Friday","date":"2026-07-17","min":810,"startLocal":"2026-07-17T13:30:00","endLocal":"2026-07-17T14:00:00","time":"1:30 PM","endTime":"2:00 PM","stage":"Industry Breakout Room 2","title":"Secrets of World Class Editing ","desc":"A discussion with two of the best editors in the world on the art, science and future of video production.  You'll learn about when to break pacing, how to rescue bad footage, the magic of great scoring, what automation can handle and what it can't, and what separates a good cut from one that goes viral. This session explores the secrets of world-class editing, where AI can help (and where it fails), and the tips, tricks and technique that separate the best from the rest. We’ll also talk about why “human taste” is still the bottleneck that matters.","people":["Ruslan Ranjabar","Palestrina McCaffrey"]},{"id":"recY49fV1UL3gdbra","day":"Fri","dayName":"Friday","date":"2026-07-17","min":850,"startLocal":"2026-07-17T14:10:00","endLocal":"2026-07-17T14:25:00","time":"2:10 PM","endTime":"2:25 PM","stage":"Main Stage","title":"Builders Wanted","desc":"The creators winning AI brand partnerships use the product every day. Lifestyle influencers need not apply. This fireside chat with Cursor creator partnership lead Mike McConnon explores how AI companies find creators who genuinely build stuff, why niche and authentic beats broad and polished, and how AI startups should build creator programs from the inside.","people":[]},{"id":"recaejLu2mzRa90Qr","day":"Fri","dayName":"Friday","date":"2026-07-17","min":865,"startLocal":"2026-07-17T14:25:00","endLocal":"2026-07-17T14:55:00","time":"2:25 PM","endTime":"2:55 PM","stage":"Main Stage","title":"How to Build a Community That Does Not Suck","desc":"Most communities fail. They overpromise, underdeliver, and slowly turn into ghost towns. This session brings together creators and operators who have built communities that members actually use, value, and renew. You will learn how to define real member value, choose the right platform, structure memberships, design programming that drives participation, and build systems that keep the experience fresh over time. Walk away with a clear framework for launching or fixing a community that generates buzz, loyalty and revenue instead of churn and regret.","people":["Evan And Katelyn","Mary Kish","Caitlin Hofmeister"]},{"id":"rec2mwjfenF0pMRwt","day":"Fri","dayName":"Friday","date":"2026-07-17","min":895,"startLocal":"2026-07-17T14:55:00","endLocal":"2026-07-17T15:25:00","time":"2:55 PM","endTime":"3:25 PM","stage":"Main Stage","title":"The AI Showrunner: Creation, Formats and Collaboration","desc":"A look at the frontier of AI storytelling. How are creators using AI to build entire narrative series and movies? We explore tools that move beyond \"slop\" into genuine, funny, and engaging narrative formats.","people":["Adi Sideman","Nik Kleverov","Todd Terrazas","Rachel Masters"]},{"id":"recu4yoNUrN4yj5Iu","day":"Fri","dayName":"Friday","date":"2026-07-17","min":925,"startLocal":"2026-07-17T15:25:00","endLocal":"2026-07-17T15:55:00","time":"3:25 PM","endTime":"3:55 PM","stage":"Main Stage","title":"Building the Community That Builds With You","desc":"A big audience and a real community are two very different things and most creators don't realize which one they have until they ask their audience to show up. This conversation brings together makers and creators who've figured out how to tell the difference: who in their audience is just watching, and who is genuinely invested. We'll talk about creative ownership, what community-driven product launches actually look like from the inside, and how some of the most interesting things being made right now started not with a solo vision — but with a creator and their most loyal people building something together.","people":["Nathan Nalevanko","Ten Hundred","Joel Creates","Henry Van Dyke","Jim Louderback"]},{"id":"recUSvNvrnWyZtzg2","day":"Fri","dayName":"Friday","date":"2026-07-17","min":980,"startLocal":"2026-07-17T16:20:00","endLocal":"2026-07-17T16:50:00","time":"4:20 PM","endTime":"4:50 PM","stage":"Main Stage","title":"The Changing Face of Fandom","desc":"Gen Z is leaving the public feed. This session explores the changing face of fandom, where \"microfandoms\" and private servers replace likes and followers. Find out why trust is the only metric that matters, and how smart brands, creators and platforms are building communities of value Featuring insights from Discord, Disney, Signal and more.","people":["Concept Bytes","Tyler Vaught","Drew Rowny","Gwen Miller"]},{"id":"reco8RHepbwqCDSEU","day":"Fri","dayName":"Friday","date":"2026-07-17","min":1010,"startLocal":"2026-07-17T16:50:00","endLocal":"2026-07-17T17:20:00","time":"4:50 PM","endTime":"5:20 PM","stage":"Main Stage","title":"Save the World, Keep the Audience","desc":"\"Hank Green built Complexly to make education a mission, not just a format. Matt Fitzgerald led the largest creator-driven fundraising campaigns ever made, most recently #TeamWater with Mark Rober and MrBeast. In this conversation they talk about how to move from content to cause and the rise of creator philanthropy. They'll explore what works, how you structure the org, and how to build something durable without losing the soul of your community.","people":["Hank Green","Matt Fitzgerald","Zara Stone"]},{"id":"rec9ihXhjgHT3rQhb","day":"Fri","dayName":"Friday","date":"2026-07-17","min":1040,"startLocal":"2026-07-17T17:20:00","endLocal":"2026-07-17T18:00:00","time":"5:20 PM","endTime":"6:00 PM","stage":"Main Stage","title":"AI in the Next 12 Months That You Will Actually Use","desc":"Forget rosy futures or dystopian doom'n'gloom.  This session provides a roadmap focused on what will change in production, discovery, localization, agents, digital twins and personalization in the next year. We’ll separate “cool demo” from “repeatable workflow,” and hand you a short list of disruptive products and services, along with ground-breaking new capabilities... all coming in the next year.","people":["Aishwarya Srinivasan","Taz Patel","Ben Relles","Monica  Khan"]},{"id":"recMlkrYC2JBUZxlp","day":"Fri","dayName":"Friday","date":"2026-07-17","min":1080,"startLocal":"2026-07-17T18:00:00","endLocal":null,"time":"6:00 PM","endTime":null,"stage":"","title":"Networking Reception","desc":"","people":[]},{"id":"reclm3W58QcwQvUr0","day":"Fri","dayName":"Friday","date":"2026-07-17","min":1080,"startLocal":"2026-07-17T18:00:00","endLocal":null,"time":"6:00 PM","endTime":null,"stage":"","title":"VIP Preview Party Opens","desc":"","people":[]},{"id":"recdLBcgsG76xhmZu","day":"Fri","dayName":"Friday","date":"2026-07-17","min":1260,"startLocal":"2026-07-17T21:00:00","endLocal":null,"time":"9:00 PM","endTime":null,"stage":"","title":"VIP Preview Party Ends","desc":"","people":[]},{"id":"recUIibuBwMf6HCfG","day":"Sat","dayName":"Saturday","date":"2026-07-18","min":540,"startLocal":"2026-07-18T09:00:00","endLocal":null,"time":"9:00 AM","endTime":null,"stage":"","title":"VIP Doors Open","desc":"","people":[]},{"id":"recAQp72qsZg4T5Bc","day":"Sat","dayName":"Saturday","date":"2026-07-18","min":600,"startLocal":"2026-07-18T10:00:00","endLocal":null,"time":"10:00 AM","endTime":null,"stage":"","title":"GA Doors Open","desc":"","people":[]},{"id":"recrAEdd2Si8wwSLh","day":"Sat","dayName":"Saturday","date":"2026-07-18","min":615,"startLocal":"2026-07-18T10:15:00","endLocal":"2026-07-18T10:45:00","time":"10:15 AM","endTime":"10:45 AM","stage":"Main Stage","title":"Welcome to Open Sauce!","desc":"Safety Third welcomes everyone to the fourth annual Open Sauce!","people":["Kevin","NileRed","Allen Pan","William Osman"]},{"id":"recDccvXOJ28gyUSI","day":"Sat","dayName":"Saturday","date":"2026-07-18","min":620,"startLocal":"2026-07-18T10:20:00","endLocal":"2026-07-18T10:50:00","time":"10:20 AM","endTime":"10:50 AM","stage":"Outdoor Stage","title":"PANEL: Vroom Vroom","desc":"A panel about cars: the people who fix them, the people who break them, and the people who drive them really far.","people":["c90adventures","Aging Wheels","Tech Joyce","Zip Tie Tuning","Quiet Nerd","Louis Weisz"]},{"id":"recMJyhKXeGb1lTnE","day":"Sat","dayName":"Saturday","date":"2026-07-18","min":650,"startLocal":"2026-07-18T10:50:00","endLocal":"2026-07-18T11:20:00","time":"10:50 AM","endTime":"11:20 AM","stage":"Main Stage","title":"PANEL: Making Content About Making Projects","desc":"Making stuff is hard. Making content is hard. Making content about making stuff is even harder. Creators discuss the intersect of storytelling, education, entertainment, and the algorithm.","people":["Emily The Engineer","Joel Creates","Thought Emporium","Tom Stanton","Stuff Made Here","Stephen Hawes"]},{"id":"recP8of8rQcxmEASQ","day":"Sat","dayName":"Saturday","date":"2026-07-18","min":660,"startLocal":"2026-07-18T11:00:00","endLocal":"2026-07-18T11:30:00","time":"11:00 AM","endTime":"11:30 AM","stage":"Outdoor Stage","title":"PANEL: It's Alive?","desc":"These creators may make robots, but they're anything but robotics. From wearables to walking coffee tables, this panel digs into the robotics projects that worked and the ones that never came to life.","people":["Aaed Musa","Odd_Jayy","She Builds Robots","Concept Bytes","Mr. Volt","Jeremy Fielding"]},{"id":"receuGpXcxigvNTgj","day":"Sat","dayName":"Saturday","date":"2026-07-18","min":685,"startLocal":"2026-07-18T11:25:00","endLocal":"2026-07-18T12:10:00","time":"11:25 AM","endTime":"12:10 PM","stage":"Main Stage","title":"Ask Hank Anything Live","desc":"Ask Hank Anything Live","people":["William Osman","Hank Green"]},{"id":"recGO8vAIOxDvQkMY","day":"Sat","dayName":"Saturday","date":"2026-07-18","min":695,"startLocal":"2026-07-18T11:35:00","endLocal":"2026-07-18T12:05:00","time":"11:35 AM","endTime":"12:05 PM","stage":"Outdoor Stage","title":"PANEL: Knives, Screwdrivers, and Frisbees, Oh My!","desc":"Creators are no longer just selling t-shirts and hoodies, they're shipping real products. This panel brings together creators who've built physical products to talk about what it actually takes: from finding the right manufacturers, to endless product testing and learning what people actually want. ","people":["Luke Lafreniere","Evan And Katelyn","Ten Hundred","CNC Kitchen","Ruth Amos"]},{"id":"recRnNciEupHLpCyd","day":"Sat","dayName":"Saturday","date":"2026-07-18","min":735,"startLocal":"2026-07-18T12:15:00","endLocal":"2026-07-18T12:45:00","time":"12:15 PM","endTime":"12:45 PM","stage":"Outdoor Stage","title":"PANEL: The Sky Isn't The Limit - AMA","desc":"We're all looking up at the stars, but these creators are looking up the engineering. Ask them your burning rocketry questions before they leave the atmosphere.","people":["Integza","BPS.space","Scott Manley","Destin Sandlin","Everyday Astronaut"]},{"id":"recBhd8C9phyltBoM","day":"Sat","dayName":"Saturday","date":"2026-07-18","min":760,"startLocal":"2026-07-18T12:40:00","endLocal":"2026-07-18T13:25:00","time":"12:40 PM","endTime":"1:25 PM","stage":"Main Stage","title":"2,000 People Play a Video Game","desc":"Build a bot with 500 of your closest friends and have them fight it out on stage, live. ","people":["ConnorEatsPants","DougDoug","Internet Comment Etiquette","Code Bullet","The Primeagen"]},{"id":"recLrU01Imjfq40pi","day":"Sat","dayName":"Saturday","date":"2026-07-18","min":770,"startLocal":"2026-07-18T12:50:00","endLocal":"2026-07-18T13:20:00","time":"12:50 PM","endTime":"1:20 PM","stage":"Outdoor Stage","title":"PANEL: The State of 3D Printing","desc":"3D printing in 2026 looks nothing like it did even two years ago. A conversation about where the industry actually is right now, what's changing when nobody's looking, and what's coming next.","people":["Nate From the Internet","Tom Stanton","Ivan Miranda","Strelkomania","CNC Kitchen","Engineezy"]},{"id":"recQQMFXIvWxeH1b2","day":"Sat","dayName":"Saturday","date":"2026-07-18","min":815,"startLocal":"2026-07-18T13:35:00","endLocal":"2026-07-18T13:50:00","time":"1:35 PM","endTime":"1:50 PM","stage":"Main Stage","title":"Fireside Chat: Jason Fischer","desc":"","people":["Jason Fischer","William Osman"]},{"id":"recCWfWOHlbX1mjDw","day":"Sat","dayName":"Saturday","date":"2026-07-18","min":830,"startLocal":"2026-07-18T13:50:00","endLocal":"2026-07-18T14:20:00","time":"1:50 PM","endTime":"2:20 PM","stage":"Outdoor Stage","title":"The Kevin Show Live","desc":"We pulled Kevin out of his garage and onto the stage to answer your questions LIVE! Join him (and friends) for extremely educational content and perfectly executed demos.","people":["Ted Nivison","Ranboo","PointCrow","Kevin"]},{"id":"rec5bLsBy8YCdpo7N","day":"Sat","dayName":"Saturday","date":"2026-07-18","min":835,"startLocal":"2026-07-18T13:55:00","endLocal":"2026-07-18T14:25:00","time":"1:55 PM","endTime":"2:25 PM","stage":"Main Stage","title":"PANEL: Uh Oh! It's an AI Panel","desc":"AI is hitting every niche differently. It's writing essays, generating code, and faking science. Creators from tech, education, video essays, and more talk about what AI is actually doing in their corners of the internet. What it's getting wrong, what it's getting right, and what it means for the future of their industries.","people":["Applied Science","Hbomberguy","The Slow Mo Guys","Code Bullet","The Brain Scoop","Theo"]},{"id":"recY5SAZBNMuMcx7l","day":"Sat","dayName":"Saturday","date":"2026-07-18","min":865,"startLocal":"2026-07-18T14:25:00","endLocal":"2026-07-18T14:55:00","time":"2:25 PM","endTime":"2:55 PM","stage":"Outdoor Stage","title":"A new era of BattleBots has begun!","desc":"BattleBots newest season, Pro League, will exclusively air on YouTube.\nHear from the builders who competed and learn about the new competition format.","people":["Bunny Liaw","Aren Hill","Derek Tran","Leanne Cushing","Zach Lytle","Ray Billings","Peter Abrahamson"]},{"id":"recGeSdvavq1p3KBk","day":"Sat","dayName":"Saturday","date":"2026-07-18","min":870,"startLocal":"2026-07-18T14:30:00","endLocal":"2026-07-18T15:00:00","time":"2:30 PM","endTime":"3:00 PM","stage":"Main Stage","title":"PANEL: This Panel is Electric.","desc":"How many car batteries can one panel have? Feel the energy of this absolutely electric group of creators as they discuss lasers, lightning, and high-voltage experiments.","people":["Drake Anthony (styropyro)","AlphaPhoenix","ElectroBOOM","Allen Pan"]},{"id":"recMzQ9TPxYKBp4F6","day":"Sat","dayName":"Saturday","date":"2026-07-18","min":900,"startLocal":"2026-07-18T15:00:00","endLocal":"2026-07-18T15:30:00","time":"3:00 PM","endTime":"3:30 PM","stage":"Outdoor Stage","title":"PANEL: When Is a Bad Idea A Good Idea?","desc":"These creators tried everything so you don't have to. Join them to talk about the projects nobody else would attempt, the lessons learned from doing them anyway, and how to tell when a bad idea is actually a great one in disguise.","people":["Waterjet Channel","Louis Weisz","Emily The Engineer","The Action Lab","Stuff Made Here","Ali Spagnola"]},{"id":"recs2ajtBbrDxY64u","day":"Sat","dayName":"Saturday","date":"2026-07-18","min":905,"startLocal":"2026-07-18T15:05:00","endLocal":"2026-07-18T15:35:00","time":"3:05 PM","endTime":"3:35 PM","stage":"Main Stage","title":"PANEL: When Art Becomes a Business","desc":"These creators took their toontown and made it a boomtown. Somewhere along the way, an animation channel stops being a solo project and starts being a studio. How do these creators keep a personal voice in their art when there's more pressure and more hands?","people":["Alan Becker","TheOdd1sOut","Illymation","Let Me Explain Studios","Pojo Riegert"]},{"id":"recO412OubB1IgPfU","day":"Sat","dayName":"Saturday","date":"2026-07-18","min":935,"startLocal":"2026-07-18T15:35:00","endLocal":"2026-07-18T16:05:00","time":"3:35 PM","endTime":"4:05 PM","stage":"Outdoor Stage","title":"PANEL: The Art Of Electronics","desc":"Creators who design, build, and document electronics talk about the tension between form and function, the beauty of simplicity, and why showing the inside of a thing is sometimes more interesting than hiding it.","people":["Ben Eater","Stephen Hawes","Becky Stern","Atarabyte","Jeff Geerling","Sean Hodgins"]},{"id":"recMcFay4x1w1w6Ac","day":"Sat","dayName":"Saturday","date":"2026-07-18","min":950,"startLocal":"2026-07-18T15:50:00","endLocal":"2026-07-18T16:35:00","time":"3:50 PM","endTime":"4:35 PM","stage":"Main Stage","title":"GAME: Carp Tank","desc":"Carp Tank is back and better than ever. Join our four ruthless business carp as they are pitched a variety of investment opportunities by real Open Sauce exhibitors. Will they give them their REAL MONEY? (they won't)","people":["Alex Ernst","Tech Joyce","Ruth Amos","c90adventures","Integza","William Osman","Internet Comment Etiquette"]},{"id":"recCBuHtNQfvt8wcn","day":"Sat","dayName":"Saturday","date":"2026-07-18","min":975,"startLocal":"2026-07-18T16:15:00","endLocal":"2026-07-18T16:45:00","time":"4:15 PM","endTime":"4:45 PM","stage":"Outdoor Stage","title":"PANEL: Making For Fandom","desc":"Building from fandom comes with a built-in audience and a built-in critic. Creators discuss what it's like to bring fictional worlds into physical reality, how they navigate the expectations of deeply passionate communities, and how to actually make something work when science fiction is ahead of science.","people":["Wicked Makers","Kiara's Workshop","littlejem","Stella Chuu"]},{"id":"recQTg7Nphbd2gnnr","day":"Sat","dayName":"Saturday","date":"2026-07-18","min":1000,"startLocal":"2026-07-18T16:40:00","endLocal":"2026-07-18T17:15:00","time":"4:40 PM","endTime":"5:15 PM","stage":"Main Stage","title":"PANEL: Dangerous People v The Law","desc":"In past iterations of the Dangerous People panel, our panelists have questioned the legality of their projects. And so have the FBI. We decided it was time that they speak to someone who knows. Join these creators as they receive live 'legal counsel' about their dangerous project ideas.\n\n**Legally this is a joke**","people":["Drake Anthony (styropyro)","Kevin","NileRed","Explosions&Fire","Cody's Lab","Tyler Chou"]},{"id":"receKQqqRJwTGtLqT","day":"Sat","dayName":"Saturday","date":"2026-07-18","min":1010,"startLocal":"2026-07-18T16:50:00","endLocal":"2026-07-18T17:20:00","time":"4:50 PM","endTime":"5:20 PM","stage":"Outdoor Stage","title":"PANEL: Making in Short Form","desc":"Long projects, Short stories. Even shorter panel description.","people":["Engineezy","Crescent Shay","Estefannie","Joseph's Machines","She Builds Robots","Works By Design","Mewtru"]},{"id":"recQjGuuAKMACbrvx","day":"Sat","dayName":"Saturday","date":"2026-07-18","min":1040,"startLocal":"2026-07-18T17:20:00","endLocal":"2026-07-18T17:55:00","time":"5:20 PM","endTime":"5:55 PM","stage":"Main Stage","title":"PANEL: Where YouTube Engineering is Headed Next","desc":"Engineering YouTube didn't always look like this. Before the eight-figure budgets, brand deals, and squid game sets, it was someone in a garage with a tripod and a curiosity problem. Creators who've been here through it all talk about how the platform has changed, how the audience has changed, and what they think the future holds.","people":["Mark Rober","Colin Furze","JerryRigEverything","Destin Sandlin","Jim Louderback"]},{"id":"rech4tGwdNO0cWQS6","day":"Sat","dayName":"Saturday","date":"2026-07-18","min":1045,"startLocal":"2026-07-18T17:25:00","endLocal":"2026-07-18T17:55:00","time":"5:25 PM","endTime":"5:55 PM","stage":"Outdoor Stage","title":"PANEL: The Mythical Algorithm","desc":"How do social media algorithms work? No one really knows. But these creators have broken through the noise. Join them as they discuss what they've learned through years of content creation, how they deal with constantly changing best practices, and which algorithm myths may be true.","people":["Let Me Explain Studios","Corridor Crew","ElectroBOOM","CircleToonsHD / Christian Brantley","Funky Frog Bait","Matthew Harris"]},{"id":"recugV9Ps1ohiRRXO","day":"Sun","dayName":"Sunday","date":"2026-07-19","min":540,"startLocal":"2026-07-19T09:00:00","endLocal":null,"time":"9:00 AM","endTime":null,"stage":"","title":"VIP Doors Open","desc":"","people":[]},{"id":"recXmMvMV2kiGcZrA","day":"Sun","dayName":"Sunday","date":"2026-07-19","min":600,"startLocal":"2026-07-19T10:00:00","endLocal":null,"time":"10:00 AM","endTime":null,"stage":"","title":"GA Doors Open","desc":"","people":[]},{"id":"recxWVuJQCvG32DoJ","day":"Sun","dayName":"Sunday","date":"2026-07-19","min":610,"startLocal":"2026-07-19T10:10:00","endLocal":"2026-07-19T10:40:00","time":"10:10 AM","endTime":"10:40 AM","stage":"Outdoor Stage","title":"PANEL: Whimsical Making","desc":"At the intersection of art and engineering sits a very specific kind of project: one that didn't need to exist but absolutely had to. Join these creators to discuss the builds, the inspirations, and the joyful process behind work designed to make people smile first and make sense second.","people":["Ali Spagnola","Estefannie","Joseph's Machines","Unnecessary Inventions","MaveMadeIt","Matthew Harris"]},{"id":"recekRm8zKWlb9G7i","day":"Sun","dayName":"Sunday","date":"2026-07-19","min":630,"startLocal":"2026-07-19T10:30:00","endLocal":"2026-07-19T11:10:00","time":"10:30 AM","endTime":"11:10 AM","stage":"Main Stage","title":"PANEL: Houston, We Have A Panel","desc":"Artemis II made space trendy again, but these creators have been here the whole time. Join them as they talk about what's actually exciting right now, what's overhyped, and what the next few years of spaceflight look like from the people watching it closest.","people":["AstroKobi","ASTRO ALEXANDRA","Everyday Astronaut","Real Engineering","Scott Manley","Hank Green"]},{"id":"recXygIsKPhSxPSat","day":"Sun","dayName":"Sunday","date":"2026-07-19","min":645,"startLocal":"2026-07-19T10:45:00","endLocal":"2026-07-19T11:15:00","time":"10:45 AM","endTime":"11:15 AM","stage":"Outdoor Stage","title":"PANEL: Conservation through Content","desc":"The internet has changed who gets to do conservation work and how it reaches people. Creators talk about how online audiences have become a real force in conservation, what actually moves the needle, and how to turn views into outcomes for the animals and ecosystems they cover.","people":["The Brain Scoop","Lindsay Nikole","Caveman Wildlife","Ian Slater","Tier Zoo"]},{"id":"recr59imNE4ekClA5","day":"Sun","dayName":"Sunday","date":"2026-07-19","min":675,"startLocal":"2026-07-19T11:15:00","endLocal":"2026-07-19T11:45:00","time":"11:15 AM","endTime":"11:45 AM","stage":"Main Stage","title":"PANEL: Alchemy","desc":"What if one thing was another thing now? These creator chemists answer that question (or something close to it) in every video. How do they do it? How do they not explode? This panel will help you find out! Just don't try any of it at home.","people":["Thought Emporium","NileRed","Explosions&Fire","NightHawkInLight","PointCrow"]},{"id":"recIPYir9zpTTsUDG","day":"Sun","dayName":"Sunday","date":"2026-07-19","min":680,"startLocal":"2026-07-19T11:20:00","endLocal":"2026-07-19T11:50:00","time":"11:20 AM","endTime":"11:50 AM","stage":"Outdoor Stage","title":"PANEL: How To Teach Yourself Anything","desc":"Self-teaching looks easy in a montage, but the reality is months of confusion, dead ends, and slow progress. Creators who've taught themselves across wildly different fields share what works, how to keep going when nothing makes sense, and the art of just figuring it out.","people":["Sondering Emily","Atarabyte","Technology Connections","How to Make Everything","Sam Meeps","Nate From the Internet"]},{"id":"recjOf1S8LmlxP7yh","day":"Sun","dayName":"Sunday","date":"2026-07-19","min":710,"startLocal":"2026-07-19T11:50:00","endLocal":"2026-07-19T12:35:00","time":"11:50 AM","endTime":"12:35 PM","stage":"Main Stage","title":"GAME: Creator Feud","desc":"Creator Feud is BACK! Watch as two teams of creators battle against each other to guess how YOU (the Open Sauce attendees) answered a series of survey questions. Be sure to answer the questions in the event app before Sunday to have your voice heard!","people":["Vsauce","Destin Sandlin","Emily The Engineer","Funky Frog Bait","Slimecicle","Drake Anthony (styropyro)","Michael Reeves"]},{"id":"rec6oa0NqRvbAD0pY","day":"Sun","dayName":"Sunday","date":"2026-07-19","min":710,"startLocal":"2026-07-19T11:50:00","endLocal":null,"time":"11:50 AM","endTime":null,"stage":"Outdoor Stage","title":"Lunch","desc":"","people":[]},{"id":"recZ1hrCqkOAGsBKx","day":"Sun","dayName":"Sunday","date":"2026-07-19","min":740,"startLocal":"2026-07-19T12:20:00","endLocal":"2026-07-19T13:05:00","time":"12:20 PM","endTime":"1:05 PM","stage":"Outdoor Stage","title":"The Kevin Show Live","desc":"We pulled Kevin out of his garage and onto the stage to answer your questions LIVE! Join him (and some surprise guests) for extremely educational content and perfectly executed demos. Sponsored by xTool!","people":["Mewtru","Keith Sachs","WoolyBeetle1","MaveMadeIt","ChromaLock","Tom Builds Stuff","Strelkomania","Nate Scovill","Kevin"]},{"id":"recs4cV2its9Cm2Gz","day":"Sun","dayName":"Sunday","date":"2026-07-19","min":785,"startLocal":"2026-07-19T13:05:00","endLocal":"2026-07-19T13:35:00","time":"1:05 PM","endTime":"1:35 PM","stage":"Main Stage","title":"PANEL: The Vibes of Coding","desc":"Coding has never been more accessible, or more chaotic. Developers, creators, and game-devs talk about what's working now, what's broken, and what it actually takes to make something people use.","people":["Juniper Dev","Sondering Emily","Poly Mars","Code Bullet","The Primeagen","PirateSoftware","Jabrils"]},{"id":"reck063k5VAfsErDQ","day":"Sun","dayName":"Sunday","date":"2026-07-19","min":795,"startLocal":"2026-07-19T13:15:00","endLocal":"2026-07-19T13:45:00","time":"1:15 PM","endTime":"1:45 PM","stage":"Outdoor Stage","title":"PANEL: The Beginner Creator's Toolkit","desc":"Every new creator gets the same advice: just start. This panel covers how to actually do that, from a more technical perspective. Learn about the gear, the software, and the workflow habits that make the difference between burning out at video three and still uploading a year later.\n","people":["Captain Disillusion","Ten Hundred","Daniel","Evan And Katelyn","Jakkuh","Waterjet Channel"]},{"id":"recFanltWKvefEgQg","day":"Sun","dayName":"Sunday","date":"2026-07-19","min":820,"startLocal":"2026-07-19T13:40:00","endLocal":"2026-07-19T13:55:00","time":"1:40 PM","endTime":"1:55 PM","stage":"Main Stage","title":"Fireside Chat: Alex Hirsch x TheOdd1sOut","desc":"Alex Hirsch, the creator of Gravity Falls, and TheOdd1sOut chat about their experiences with animation, storytelling, fandom, and more.","people":["TheOdd1sOut","Alex Hirsch"]},{"id":"recernebgnPO9YQtt","day":"Sun","dayName":"Sunday","date":"2026-07-19","min":830,"startLocal":"2026-07-19T13:50:00","endLocal":"2026-07-19T14:20:00","time":"1:50 PM","endTime":"2:20 PM","stage":"Outdoor Stage","title":"PANEL: Scripting Science","desc":"Creators dig into the part of science communication that most viewers never see: the writing. How they pick a topic, find the right voice, and turn a pile of research into a script that actually keeps people watching.","people":["Practical Engineering","Technology Connections","Tier Zoo","Lindsay Nikole","AstroKobi","Gregor Čavlović","Trace Dominguez"]},{"id":"recAgmT41RuTnlFLG","day":"Sun","dayName":"Sunday","date":"2026-07-19","min":845,"startLocal":"2026-07-19T14:05:00","endLocal":"2026-07-19T14:35:00","time":"2:05 PM","endTime":"2:35 PM","stage":"Main Stage","title":"PANEL: Innovating in Streaming","desc":"What if you built cool stuff for a livestream and then used it on a livestream? These creators already have and now they're going to talk about it.","people":["PointCrow","CodeMiko","PerriKaryal","DougDoug","Michael Reeves","WoolyBeetle1"]},{"id":"recfwVfjoJJZZkvyM","day":"Sun","dayName":"Sunday","date":"2026-07-19","min":865,"startLocal":"2026-07-19T14:25:00","endLocal":"2026-07-19T14:55:00","time":"2:25 PM","endTime":"2:55 PM","stage":"Outdoor Stage","title":"PANEL: The Cosplay Process","desc":"Cosplayers share what really happens between the reference photo and the convention floor. Learn about the late nights, the creative processes, and the parts that definitely weren't hot-glued in the parking lot. ","people":["Kiara's Workshop","Stella Chuu","littlejem","Sam Meeps","Crescent Shay","Toxickbunny","Amy Roberts, The Style Theorist"]},{"id":"recj03XfCCnucU4DU","day":"Sun","dayName":"Sunday","date":"2026-07-19","min":880,"startLocal":"2026-07-19T14:40:00","endLocal":"2026-07-19T15:10:00","time":"2:40 PM","endTime":"3:10 PM","stage":"Main Stage","title":"PANEL: Homesteading","desc":"Whether through a ghost town, a base, a farm, or a \"farm\", these creators bring off-the-grid online. Join them for a conversation about dirt, livestock, abandoned buildings, and the projects that never quite end.","people":["Brent Underwood","Cody's Lab","Farmcraft101","Kevin","William Osman"]},{"id":"recAULJp3dizk9DkE","day":"Sun","dayName":"Sunday","date":"2026-07-19","min":905,"startLocal":"2026-07-19T15:05:00","endLocal":"2026-07-19T15:35:00","time":"3:05 PM","endTime":"3:35 PM","stage":"Outdoor Stage","title":"GAME: Art Enemies","desc":"A legally distinct drawing and guessing game with real consequences...","people":["Audity","Bobby Duke Arts","Ten Hundred","LilyPichu","Let Me Explain Studios","GingerPale","TheOdd1sOut"]},{"id":"recUR3B8KQC3fp81Y","day":"Sun","dayName":"Sunday","date":"2026-07-19","min":920,"startLocal":"2026-07-19T15:20:00","endLocal":"2026-07-19T16:00:00","time":"3:20 PM","endTime":"4:00 PM","stage":"Main Stage","title":"PANEL: Educational Content in the Age of AI Slop","desc":"The internet is drowning in auto-generated explainers, AI-narrated \"facts,\" and videos that confidently teach things that aren't true. How do creators who actually do the research, run the experiments, and check the sources break through the barrage of AI slop?","people":["Practical Engineering","ASTRO ALEXANDRA","Vsauce","World by Charlie","Trace Dominguez"]},{"id":"recSgIvK7DLEY7xAV","day":"Sun","dayName":"Sunday","date":"2026-07-19","min":940,"startLocal":"2026-07-19T15:40:00","endLocal":"2026-07-19T16:10:00","time":"3:40 PM","endTime":"4:10 PM","stage":"Outdoor Stage","title":"PANEL: Above and Beyond","desc":"Aviation today spans hobbyists building planes in their garages and companies running autonomous fleets above your neighborhood. The panel covers both, with enthusiasts weighing in on the craft, the engineering, and the next decade of flight.","people":["Tom Stanton","Peter Sripol","Scott Manley","Adam Woodworth","Real Engineering"]},{"id":"recy2JrLHFjVetyvm","day":"Sun","dayName":"Sunday","date":"2026-07-19","min":965,"startLocal":"2026-07-19T16:05:00","endLocal":"2026-07-19T16:35:00","time":"4:05 PM","endTime":"4:35 PM","stage":"Main Stage","title":"PANEL: The Science of Film Making","desc":"VFX breakdowns, high-speed photography, debunked illusions, and the slow, technical craft of turning footage into something that fools the eye. Creators who live at the intersection of filmmaking and science talk about what's changed with modern tools, and what audiences should expect next.","people":["Corridor Crew","The Slow Mo Guys","Captain Disillusion","Corridor Crew - Nick Laurant","Nate Scovill"]},{"id":"recSpJejRb8EwYfY9","day":"Sun","dayName":"Sunday","date":"2026-07-19","min":980,"startLocal":"2026-07-19T16:20:00","endLocal":"2026-07-19T16:50:00","time":"4:20 PM","endTime":"4:50 PM","stage":"Outdoor Stage","title":"PANEL: When The Tool Is The Project","desc":"Sometimes the most interesting build in the shop isn't on the workshop, it is the workshop. Creators talk about custom tools, homemade machines, and the everyday craft of machining.","people":["CNC Kitchen","Jeremy Fielding","Marius Hornberger","Strange Parts"]},{"id":"recJ4Np8UmSYid8DZ","day":"Sun","dayName":"Sunday","date":"2026-07-19","min":1005,"startLocal":"2026-07-19T16:45:00","endLocal":"2026-07-19T17:25:00","time":"4:45 PM","endTime":"5:25 PM","stage":"Main Stage","title":"GAME: You're in Jeopardy","desc":"What if there was more jeopardy in Jeopardy? We're about to find out with this SHOCKING twist.","people":["Ted Nivison","Waterjet Channel","Allen Pan","Crescent Shay","Alex Ernst"]},{"id":"recfpT2l8r4RZAcnj","day":"Sun","dayName":"Sunday","date":"2026-07-19","min":1015,"startLocal":"2026-07-19T16:55:00","endLocal":"2026-07-19T17:25:00","time":"4:55 PM","endTime":"5:25 PM","stage":"Outdoor Stage","title":"PANEL: Building A PC In 2026","desc":"It's getting really weird out here isn't it? A chat about what putting a PC together actually looks like right now. ","people":["Jakkuh","Jeff Geerling","Luke Lafreniere","Atarabyte","Dan Ackerman"]},{"id":"rec8nDNIsuwtm1X4i","day":"Sun","dayName":"Sunday","date":"2026-07-19","min":1050,"startLocal":"2026-07-19T17:30:00","endLocal":"2026-07-19T18:00:00","time":"5:30 PM","endTime":"6:00 PM","stage":"Outdoor Stage","title":"PANEL: How AI has Changed the YouTube Landscape","desc":"AI is in the tools, the thumbnails, the captions, the comments, and increasingly, the competition. A conversation with creators about where AI actually helps in a real workflow, where it doesn't, and what it's doing to the platform, the audience, and the kind of work that gets rewarded.","people":["CodeMiko","The Primeagen","The Action Lab","Jabrils","Emily Higgins"]},{"id":"recrxXmehHSaWVXQu","day":"Sun","dayName":"Sunday","date":"2026-07-19","min":1050,"startLocal":"2026-07-19T17:30:00","endLocal":"2026-07-19T17:50:00","time":"5:30 PM","endTime":"5:50 PM","stage":"Main Stage","title":"William Osman's Big Surprise","desc":"What will it be? Does it exist? Only one way to find out.","people":["William Osman"]}];
+  const FEATURED = ["William Osman", "Kevin", "BPS.space", "Hank Green", "Michael Reeves"];
+  const DAY_ORDER = { Fri: 0, Sat: 1, Sun: 2 };
+  const LS_SELECTED = "os26_selected_v1";
+  const LS_SEEDED = "os26_seeded_v1";
+
+  // ---- State ----
+  const featSet = new Set(FEATURED);
+  function loadSelected() {
+    try { return new Set(JSON.parse(localStorage.getItem(LS_SELECTED) || "[]")); }
+    catch { return new Set(); }
+  }
+  function saveSelected() {
+    localStorage.setItem(LS_SELECTED, JSON.stringify([...selected]));
+  }
+  let selected = loadSelected();
+
+  // First-visit seed: star every session featuring a requested creator.
+  if (!localStorage.getItem(LS_SEEDED)) {
+    for (const s of SESSIONS) {
+      if (s.people.some(p => featSet.has(p))) selected.add(s.id);
+    }
+    saveSelected();
+    localStorage.setItem(LS_SEEDED, "1");
+  }
+
+  const state = {
+    day: "all",
+    stage: "all",
+    creators: new Set(),   // active featured-creator filters
+    q: "",
+    mineOnly: false,
+  };
+
+  // ---- Elements ----
+  const $ = sel => document.querySelector(sel);
+  const listEl = $("#list");
+  const mineCountEl = $("#mineCount");
+  const resultCountEl = $("#resultCount");
+
+  // ---- Build featured creator chips ----
+  const featCounts = Object.fromEntries(FEATURED.map(f => [f,
+    SESSIONS.filter(s => s.people.includes(f)).length]));
+  const featRow = $("#featuredRow");
+  const clearBtn = $("#clearCreators");
+  FEATURED.forEach(name => {
+    const b = document.createElement("button");
+    b.className = "chip creator";
+    b.dataset.creator = name;
+    b.innerHTML = `<span class="dot"></span>${name} <span class="n">${featCounts[name]}</span>`;
+    b.addEventListener("click", () => {
+      if (state.creators.has(name)) state.creators.delete(name);
+      else state.creators.add(name);
+      render();
+    });
+    featRow.insertBefore(b, clearBtn);
+  });
+
+  // ---- Build stage dropdown ----
+  const stages = [...new Set(SESSIONS.map(s => s.stage).filter(Boolean))].sort();
+  const stageSel = $("#stageSel");
+  stageSel.innerHTML = `<option value="all">All stages</option>` +
+    stages.map(s => `<option value="${s}">${s}</option>`).join("");
+
+  // ---- Filtering ----
+  function matches(s) {
+    if (state.day !== "all" && s.day !== state.day) return false;
+    if (state.stage !== "all" && s.stage !== state.stage) return false;
+    if (state.mineOnly && !selected.has(s.id)) return false;
+    if (state.creators.size && !s.people.some(p => state.creators.has(p))) return false;
+    if (state.q) {
+      const hay = (s.title + " " + s.desc + " " + s.people.join(" ")).toLowerCase();
+      if (!hay.includes(state.q)) return false;
+    }
+    return true;
+  }
+
+  function esc(str) {
+    return String(str).replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
+  }
+
+  // ---- Render ----
+  function render() {
+    // sync chip UI
+    document.querySelectorAll("[data-day]").forEach(b =>
+      b.classList.toggle("on", b.dataset.day === state.day));
+    document.querySelectorAll(".chip.creator").forEach(b =>
+      b.classList.toggle("on", state.creators.has(b.dataset.creator)));
+    $("#mineToggle").classList.toggle("active", state.mineOnly);
+    mineCountEl.textContent = selected.size;
+
+    const visible = SESSIONS.filter(matches);
+    // group by day, preserve time order (SESSIONS pre-sorted by day+time)
+    const groups = {};
+    for (const s of visible) (groups[s.day] ||= []).push(s);
+    const days = Object.keys(groups).sort((a, b) => DAY_ORDER[a] - DAY_ORDER[b]);
+
+    listEl.innerHTML = "";
+    if (!visible.length) {
+      listEl.innerHTML = `<div class="empty"><div class="big">🍅</div>
+        <p>No sessions match your filters.</p></div>`;
+    }
+    for (const day of days) {
+      const items = groups[day];
+      const first = items[0];
+      const head = document.createElement("div");
+      head.className = "day-head";
+      const dateLabel = new Date(first.date + "T12:00:00").toLocaleDateString("en-US",
+        { weekday: "long", month: "short", day: "numeric" });
+      head.innerHTML = `<h2>${first.dayName}</h2>
+        <span class="date">${dateLabel.replace(first.dayName + ", ", "")}</span>
+        <span class="day-n">${items.length} session${items.length === 1 ? "" : "s"}</span>`;
+      listEl.appendChild(head);
+
+      for (const s of items) listEl.appendChild(cardFor(s));
+    }
+
+    const n = visible.length;
+    resultCountEl.textContent = `${n} session${n === 1 ? "" : "s"}` +
+      (state.mineOnly ? " starred" : " shown");
+  }
+
+  function cardFor(s) {
+    const el = document.createElement("div");
+    const mine = selected.has(s.id);
+    el.className = "card" + (mine ? " mine" : "");
+    const outdoor = /outdoor/i.test(s.stage);
+    const stageHtml = s.stage
+      ? `<span class="stage-badge${outdoor ? " outdoor" : ""}">${esc(s.stage)}</span>` : "";
+    const endHtml = s.endTime ? `<div class="endtime">– ${esc(s.endTime)}</div>` : "";
+    const people = s.people.map(p =>
+      `<span class="person${featSet.has(p) ? " feat" : ""}">${esc(p)}</span>`).join("");
+    const peopleHtml = people ? `<div class="people">${people}</div>` : "";
+    const descHtml = s.desc ? `<p class="desc">${esc(s.desc)}</p>` : "";
+
+    el.innerHTML = `
+      <div class="when">
+        <div class="time">${esc(s.time)}</div>
+        ${endHtml}
+        ${stageHtml}
+      </div>
+      <div class="body">
+        <h3>${esc(s.title)}</h3>
+        ${descHtml}
+        ${peopleHtml}
+      </div>
+      <button class="star${mine ? " on" : ""}" data-label="${mine ? "Starred" : "Add to my schedule"}"
+        aria-pressed="${mine}" title="${mine ? "Remove from my schedule" : "Add to my schedule"}">
+        <svg viewBox="0 0 24 24" fill="${mine ? "currentColor" : "none"}" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round">
+          <path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 18.4 6.1 21l1.2-6.5L2.5 9.9l6.6-.9z"/>
+        </svg>
+      </button>`;
+
+    el.querySelector(".star").addEventListener("click", () => {
+      if (selected.has(s.id)) selected.delete(s.id);
+      else selected.add(s.id);
+      saveSelected();
+      render();
+    });
+    return el;
+  }
+
+  // ---- ICS export ----
+  function toUTC(localStr) {
+    // localStr like "2026-07-18T13:35:00" in PT (UTC-7). Add 7h → UTC.
+    const d = new Date(localStr + "Z");
+    d.setUTCHours(d.getUTCHours() + 7);
+    return d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+  }
+  function icsEscape(t) {
+    return String(t).replace(/\\/g, "\\\\").replace(/;/g, "\\;")
+      .replace(/,/g, "\\,").replace(/\n/g, "\\n");
+  }
+  function exportICS() {
+    const mine = SESSIONS.filter(s => selected.has(s.id));
+    if (!mine.length) { alert("Star some sessions first — nothing to export yet."); return; }
+    const now = new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+    const lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//web_toys//OpenSauce2026//EN",
+      "CALSCALE:GREGORIAN", "METHOD:PUBLISH", "X-WR-CALNAME:Open Sauce 2026 — My Schedule"];
+    for (const s of mine) {
+      const start = toUTC(s.startLocal);
+      // default 30-min block when no end time is given
+      let end;
+      if (s.endLocal) end = toUTC(s.endLocal);
+      else { const d = new Date(s.startLocal + "Z"); d.setUTCHours(d.getUTCHours() + 7 + 0);
+        d.setUTCMinutes(d.getUTCMinutes() + 30); end = d.toISOString().replace(/[-:]/g,"").replace(/\.\d{3}/,""); }
+      const loc = s.stage || "Open Sauce 2026";
+      const desc = [s.desc, s.people.length ? "Featuring: " + s.people.join(", ") : ""]
+        .filter(Boolean).join("\n\n");
+      lines.push("BEGIN:VEVENT",
+        "UID:" + s.id + "@opensauce.web_toys",
+        "DTSTAMP:" + now,
+        "DTSTART:" + start,
+        "DTEND:" + end,
+        "SUMMARY:" + icsEscape(s.title),
+        "LOCATION:" + icsEscape(loc),
+        "DESCRIPTION:" + icsEscape(desc),
+        "END:VEVENT");
+    }
+    lines.push("END:VCALENDAR");
+    const blob = new Blob([lines.join("\r\n")], { type: "text/calendar" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "open-sauce-2026.ics";
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  // ---- Wire up controls ----
+  document.querySelectorAll("[data-day]").forEach(b =>
+    b.addEventListener("click", () => { state.day = b.dataset.day; render(); }));
+  stageSel.addEventListener("change", () => { state.stage = stageSel.value; render(); });
+  $("#search").addEventListener("input", e => { state.q = e.target.value.trim().toLowerCase(); render(); });
+  $("#mineToggle").addEventListener("click", () => { state.mineOnly = !state.mineOnly; render(); });
+  $("#exportBtn").addEventListener("click", exportICS);
+  clearBtn.addEventListener("click", () => { state.creators.clear(); render(); });
+  $("#resetAll").addEventListener("click", () => {
+    state.day = "all"; state.stage = "all"; state.creators.clear();
+    state.q = ""; state.mineOnly = false;
+    $("#search").value = ""; stageSel.value = "all";
+    render();
+  });
+
+  render();
+  </script>
+</body>
+</html>
