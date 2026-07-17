@@ -72,6 +72,20 @@
 
     main { max-width: var(--maxw); margin: 0 auto; padding: 18px; }
 
+    /* ---- Reminders panel ---- */
+    .remind-panel {
+      background: var(--panel); border: 1px solid var(--line-strong);
+      border-radius: 14px; padding: 14px 16px; margin-bottom: 16px;
+    }
+    .remind-head { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+    .switch { display: inline-flex; align-items: center; gap: 9px; cursor: pointer; font-size: 0.9rem; font-weight: 600; }
+    .switch input { width: 17px; height: 17px; accent-color: var(--sauce); cursor: pointer; }
+    .lead { display: inline-flex; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+    .remind-note { margin: 11px 0 0; font-size: 0.82rem; color: var(--muted); line-height: 1.45; }
+    .remind-note.warn { color: var(--gold); }
+    .remind-note.err { color: #ff8a70; }
+    .remind-note code { background: var(--panel-2); padding: 1px 6px; border-radius: 5px; font-size: 0.78rem; }
+
     /* ---- Controls ---- */
     .controls { display: flex; flex-direction: column; gap: 14px; margin-bottom: 8px; }
     .search-wrap { position: relative; }
@@ -194,12 +208,32 @@
         <button class="btn" id="mineToggle" title="Show only sessions you've starred">
           ★ My Schedule <span class="count" id="mineCount">0</span>
         </button>
+        <button class="btn" id="remindBtn" aria-expanded="false" title="Get a browser notification before your starred sessions start">🔔 Reminders</button>
         <button class="btn primary" id="exportBtn" title="Download your starred sessions as a calendar file">Export .ics</button>
       </div>
     </div>
   </header>
 
   <main>
+    <div class="remind-panel" id="remindPanel" hidden>
+      <div class="remind-head">
+        <label class="switch">
+          <input type="checkbox" id="remindToggle" />
+          <span>Remind me before my starred sessions start</span>
+        </label>
+        <label class="lead">Lead time
+          <select id="leadSel" aria-label="Reminder lead time">
+            <option value="5">5 min</option>
+            <option value="10" selected>10 min</option>
+            <option value="15">15 min</option>
+            <option value="30">30 min</option>
+          </select>
+        </label>
+        <button class="link-btn" id="testNotify">Send test notification</button>
+      </div>
+      <p class="remind-note" id="remindNote"></p>
+    </div>
+
     <div class="controls">
       <div class="search-wrap">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
@@ -365,6 +399,8 @@
     const n = visible.length;
     resultCountEl.textContent = `${n} session${n === 1 ? "" : "s"}` +
       (state.mineOnly ? " starred" : " shown");
+
+    if (!$("#remindPanel").hidden) updateRemindNote();
   }
 
   function cardFor(s) {
@@ -452,6 +488,136 @@
     document.body.appendChild(a); a.click(); a.remove();
     URL.revokeObjectURL(url);
   }
+
+  // ---- Reminders (in-tab browser notifications) ----
+  // A static site can't wake itself when closed (no push server), so reminders
+  // only fire while this tab is open. We poll every 30s and notify for any
+  // starred session whose start is within the chosen lead window.
+  const LS_REMIND = "os26_remind";
+  const LS_LEAD = "os26_lead";
+  const LS_FIRED = "os26_fired";
+  const PT_OFFSET_MS = 7 * 3600e3;           // Pacific is UTC-7 during the event
+  const GRACE_MS = 2 * 60e3;                 // still notify up to 2 min after start
+  const supported = "Notification" in window;
+
+  const remind = {
+    on: localStorage.getItem(LS_REMIND) === "1",
+    leadMin: Number(localStorage.getItem(LS_LEAD) || 10),
+    fired: new Set(JSON.parse(localStorage.getItem(LS_FIRED) || "[]")),
+    timer: null,
+  };
+  function saveFired() { localStorage.setItem(LS_FIRED, JSON.stringify([...remind.fired])); }
+
+  // Epoch ms of a session's start (startLocal is wall-clock Pacific).
+  function sessionStartMs(s) { return Date.parse(s.startLocal + "Z") + PT_OFFSET_MS; }
+
+  // Pure, testable: which starred sessions are due to notify at nowMs.
+  function dueNotifications(nowMs) {
+    const leadMs = remind.leadMin * 60e3;
+    return SESSIONS.filter(s => {
+      if (!selected.has(s.id) || remind.fired.has(s.id)) return false;
+      const start = sessionStartMs(s);
+      return nowMs >= start - leadMs && nowMs < start + GRACE_MS;
+    });
+  }
+
+  function showNotification(title, body) {
+    const icon = "data:image/svg+xml," + encodeURIComponent(
+      "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%23111'/><text x='50' y='72' font-size='60' text-anchor='middle'>🥫</text></svg>");
+    return new Notification(title, { body, icon, tag: "os26" });
+  }
+
+  function checkReminders(nowMs = Date.now()) {
+    if (!remind.on || !supported || Notification.permission !== "granted") return;
+    for (const s of dueNotifications(nowMs)) {
+      const stage = s.stage || "Open Sauce";
+      showNotification(s.title, `${s.dayName} · ${s.time} · ${stage}`);
+      remind.fired.add(s.id);
+    }
+    saveFired();
+  }
+
+  function startTimer() {
+    stopTimer();
+    checkReminders();
+    remind.timer = setInterval(() => checkReminders(), 30e3);
+  }
+  function stopTimer() { if (remind.timer) { clearInterval(remind.timer); remind.timer = null; } }
+
+  function upcomingCount() {
+    const now = Date.now();
+    return SESSIONS.filter(s => selected.has(s.id) && sessionStartMs(s) > now).length;
+  }
+
+  function updateRemindNote() {
+    const note = $("#remindNote");
+    note.className = "remind-note";
+    if (!supported) {
+      note.classList.add("err");
+      note.textContent = "This browser doesn't support notifications.";
+      return;
+    }
+    const perm = Notification.permission;
+    if (remind.on && perm === "granted") {
+      const n = upcomingCount();
+      note.classList.add("warn");
+      note.innerHTML = `On — you'll be nudged <strong>${remind.leadMin} min</strong> before each of your ` +
+        `<strong>${n}</strong> upcoming starred session${n === 1 ? "" : "s"}. ` +
+        `Reminders only fire while this tab stays open (a static site can't notify you when it's closed).`;
+    } else if (perm === "denied") {
+      note.classList.add("err");
+      note.textContent = "Notifications are blocked for this site — enable them in your browser's site settings, then toggle this on.";
+    } else {
+      note.textContent = "Get a browser notification a few minutes before each starred session starts. Works only while this tab is open.";
+    }
+  }
+
+  async function setRemind(on) {
+    if (on && supported && Notification.permission !== "granted") {
+      const perm = await Notification.requestPermission();
+      if (perm !== "granted") { on = false; }
+    }
+    remind.on = on;
+    localStorage.setItem(LS_REMIND, on ? "1" : "0");
+    $("#remindToggle").checked = on;
+    $("#remindBtn").classList.toggle("active", on);
+    if (on) startTimer(); else stopTimer();
+    updateRemindNote();
+  }
+
+  // Reminders wiring
+  $("#remindBtn").addEventListener("click", () => {
+    const panel = $("#remindPanel");
+    const open = panel.hidden;
+    panel.hidden = !open;
+    $("#remindBtn").setAttribute("aria-expanded", String(open));
+    if (open) updateRemindNote();
+  });
+  $("#remindToggle").checked = remind.on;
+  $("#remindBtn").classList.toggle("active", remind.on);
+  $("#leadSel").value = String(remind.leadMin);
+  $("#remindToggle").addEventListener("change", e => setRemind(e.target.checked));
+  $("#leadSel").addEventListener("change", e => {
+    remind.leadMin = Number(e.target.value);
+    localStorage.setItem(LS_LEAD, e.target.value);
+    updateRemindNote();
+  });
+  $("#testNotify").addEventListener("click", async () => {
+    if (!supported) { alert("This browser doesn't support notifications."); return; }
+    if (Notification.permission !== "granted") {
+      const perm = await Notification.requestPermission();
+      if (perm !== "granted") { updateRemindNote(); return; }
+    }
+    showNotification("Test reminder", "Main Stage · reminders are working 🎉");
+    updateRemindNote();
+  });
+  // Re-check promptly when the tab regains focus (background timers are throttled).
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) checkReminders(); });
+  if (remind.on && supported && Notification.permission === "granted") startTimer();
+
+  // Expose internals for automated verification.
+  window.__osReminders = { dueNotifications, sessionStartMs, checkReminders, remind,
+    SESSIONS, selectedIds: () => [...selected] };
 
   // ---- Wire up controls ----
   document.querySelectorAll("[data-day]").forEach(b =>
