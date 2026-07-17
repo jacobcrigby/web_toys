@@ -20,6 +20,16 @@ The `SESSIONS` array at the top of the inline `<script>` is the entire agenda (7
 - Each source record has `sourceId, day (Fri/Sat/Sun), title, desc, stage, start, end, people[]`. Times are UTC; the event runs in Pacific (**UTC−7**, PDT). The absolute *dates* in the source are unreliable (some Sunday rows carry a May date), so the viewer derives dates from the `day` field (Fri→2026-07-17, Sat→2026-07-18, Sun→2026-07-19) and sorts by **time-of-day within each day**, never by the raw timestamp.
 - To refresh the data, re-fetch the agenda, re-run the extraction, and regenerate the embedded `SESSIONS` array. Keep the cleaned record shape the JS expects: `{id, day, dayName, date, min, startLocal, endLocal, time, endTime, stage, title, desc, people[]}`.
 
+## Reminders (in-tab notifications)
+
+The 🔔 Reminders panel fires a browser `Notification` a chosen number of minutes (5/10/15/30, default 10) before each **starred** session starts, using the session title as the heading and `day · time · stage` as the body. Key points:
+
+- **In-tab only, by design.** A static GitHub Pages site has no push server, so it cannot notify when the tab is closed (the Notification Triggers API never shipped in stable browsers). The UI states this. A single `setInterval` polls every 30s while open, plus a re-check on `visibilitychange` since background timers are throttled.
+- `dueNotifications(nowMs)` is the pure, testable core (exposed on `window.__osReminders` alongside `sessionStartMs`, `checkReminders`, `remind`, `SESSIONS`, `selectedIds`) — it returns starred, not-yet-fired sessions whose start falls in `[start − lead, start + 2 min grace]`. Fired IDs are de-duplicated and persisted.
+- Times are computed from `startLocal` as `Date.parse(startLocal + "Z") + 7h` (Pacific, UTC−7) — the same convention as the `.ics` export.
+- State persists in `localStorage`: `os26_remind` (on/off), `os26_lead` (minutes), `os26_fired` (notified IDs).
+- To verify without waiting for the event, stub `window.Notification` in a Playwright `addInitScript` and drive `checkReminders(fakeNowMs)`, or click **Send test notification**.
+
 ## Featured creators
 
 `FEATURED` (in the script) lists the creators surfaced as quick-filter chips and used to pre-seed a first-time visitor's starred list. Currently: William Osman, Kevin, BPS.space, Hank Green, Michael Reeves. On first visit every session featuring one of them is auto-starred (guarded by an `os26_seeded_v1` localStorage flag so it only happens once); the user can then add/remove any session freely.
