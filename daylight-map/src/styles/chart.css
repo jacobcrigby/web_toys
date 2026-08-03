@@ -1,0 +1,142 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+
+.chart {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-top: var(--space-2);
+  overflow: visible;
+}
+
+.chart__zone {
+  fill: var(--chart-zone);
+}
+
+.chart__grid {
+  stroke: var(--chart-grid);
+  stroke-width: 1;
+  fill: none;
+}
+
+.chart__axis {
+  stroke: var(--chart-axis);
+  stroke-width: 1;
+  fill: none;
+}
+
+.chart__label {
+  fill: var(--ink-muted);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.chart__label--y {
+  text-anchor: end;
+}
+
+.chart__label--x {
+  text-anchor: middle;
+}
+
+.chart__band {
+  fill: var(--chart-band-fill);
+  stroke: none;
+}
+
+/*
+ * The clipped copies of the band that fall outside a threshold. Colour alone
+ * never carries this: a hatch pattern overlays the same region, and the counts
+ * are stated in text beside the chart.
+ */
+.chart__band--trip {
+  fill: var(--chart-trip-fill);
+  stroke: none;
+}
+
+.chart__hatch {
+  stroke: var(--chart-trip);
+  stroke-width: 1;
+  opacity: 0.55;
+}
+
+.chart__edge {
+  fill: none;
+  stroke: var(--chart-band);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+/* The stretch of a curve that lies past a threshold, thickened so a shallow
+   crossing still reads at a glance. */
+.chart__edge--trip {
+  stroke: var(--chart-trip);
+  stroke-width: 3.5;
+}
+
+.chart__threshold {
+  stroke: var(--chart-threshold);
+  stroke-width: 1.5;
+  stroke-dasharray: 5 3;
+  fill: none;
+}
+
+.chart__threshold-label {
+  fill: var(--chart-threshold);
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.chart__transition {
+  stroke: var(--chart-transition);
+  stroke-width: 1;
+  stroke-dasharray: 2 3;
+  fill: none;
+}
+
+.chart__transition-label {
+  fill: var(--ink-muted);
+  font-family: var(--font-sans);
+  font-size: 9px;
+  text-anchor: middle;
+}
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+  color: var(--ink-secondary);
+  font-size: 0.75rem;
+}
+
+.chart-legend__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.chart-legend__swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  box-shadow: 0 0 0 1px var(--ring);
+}
+
+.chart-legend__swatch--day {
+  background: var(--chart-band-fill);
+}
+
+.chart-legend__swatch--trip {
+  background: var(--chart-trip-fill);
+}
+
+@media (forced-colors: active) {
+  .chart__band,
+  .chart__band--trip {
+    forced-color-adjust: none;
+  }
+}

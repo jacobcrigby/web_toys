@@ -3,6 +3,7 @@ packages:
   - 'pdf-to-cbz'
   - 'marblegame'
   - 'battleship'
+  - 'daylight-map'
   - 'packages/*'
 allowBuilds:
   '@firebase/util': true

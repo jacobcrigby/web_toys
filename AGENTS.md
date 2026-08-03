@@ -19,14 +19,17 @@ web_toys/
   ultimate-tic-tac-toe/       # Vite + TypeScript game (see its AGENTS.md)
   pdf-to-cbz/                 # Vite + TypeScript + PWA converter (see its AGENTS.md)
   marblegame/                 # Vite + Babylon.js + Havok physics game (see its AGENTS.md)
+  battleship/                 # Vite + TypeScript game (see its AGENTS.md)
+  daylight-map/               # Vite + TypeScript + Leaflet map (see its AGENTS.md)
   microcosm/                  # Static HTML simulation — no build step, no package.json
+  opensauce/                  # Static HTML schedule planner — no build step, no package.json
 ```
 
-`microcosm` is deliberately not a pnpm workspace — it is a single self-contained HTML file and ships as-is.
+`microcosm` and `opensauce` are deliberately not pnpm workspaces — each is a single self-contained HTML file and ships as-is.
 
 ## Package manager: pnpm workspaces
 
-This repo uses **pnpm** (not npm, not yarn, not bun). The three Vite projects are declared as workspaces; dependencies are hoisted into a shared root `node_modules`.
+This repo uses **pnpm** (not npm, not yarn, not bun). The Vite projects are declared as workspaces; dependencies are hoisted into a shared root `node_modules`.
 
 **Never create or commit a `package-lock.json` or `yarn.lock`.** The only lockfile is `pnpm-lock.yaml` at the repo root.
 
@@ -54,6 +57,9 @@ GitHub Actions (`.github/workflows/deploy.yml`) runs on every push to `main`:
    - `dist/microcosm/` ← copied as-is
    - `dist/pdf-to-cbz/` ← from `pdf-to-cbz/dist/`
    - `dist/marblegame/` ← from `marblegame/dist/`
+   - `dist/battleship/` ← from `battleship/dist/`
+   - `dist/opensauce/` ← copied as-is
+   - `dist/daylight-map/` ← from `daylight-map/dist/`
 4. Deploys `dist/` to GitHub Pages
 
 Each Vite project's `base` is set to `/web_toys/<project>/` so asset URLs resolve correctly.
@@ -69,9 +75,12 @@ All code in this repo is **Apache-2.0**. New source files in the Vite projects s
 
 ## Common conventions
 
-- **TypeScript, strict mode** in all three Vite projects. No implicit `any`.
+- **TypeScript, strict mode** in every Vite project. No implicit `any`.
 - **No external UI frameworks** at the monorepo level; each project decides its own dependencies.
-- **No backend, no accounts, no telemetry.** Everything runs in the browser.
+- **No backend, no accounts, no telemetry.** All computation happens in the browser. The one
+  project that talks to the network at runtime is `daylight-map`, which fetches map tiles from
+  CARTO — a deliberate, documented exception. Several projects go further and forbid network
+  access entirely; check the subproject `AGENTS.md` before adding a fetch.
 - **Commits:** imperative subject line, present tense ("Add X", "Fix Y"). Keep `main` always deployable — every push triggers a Pages deploy.
 - **`dist/` and `node_modules/` are gitignored** at both the root and subproject level. Never commit build artifacts.
 
@@ -84,4 +93,7 @@ Read the project's own `AGENTS.md` — it contains the architecture, commands, c
 | ultimate-tic-tac-toe | `ultimate-tic-tac-toe/AGENTS.md` |
 | pdf-to-cbz | `pdf-to-cbz/AGENTS.md` |
 | marblegame | `marblegame/AGENTS.md` |
+| battleship | `battleship/AGENTS.md` |
+| daylight-map | `daylight-map/AGENTS.md` |
 | microcosm | `microcosm/AGENTS.md` |
+| opensauce | `opensauce/AGENTS.md` |

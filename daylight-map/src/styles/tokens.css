@@ -1,0 +1,99 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+
+/*
+ * Colour roles come from the repo's data-visualisation reference palette.
+ * The two chart hues were chosen by running the palette validator rather than
+ * by eye: yellow (daylight band) against violet (threshold crossings) clears
+ * the CVD and normal-vision separation floors in both light and dark mode.
+ * Yellow sits below 3:1 against the light surface, which obliges the relief
+ * rule — visible labels and a table view, both of which this page ships.
+ */
+:root {
+  color-scheme: light;
+
+  /* surfaces and ink */
+  --surface-page: #f9f9f7;
+  --surface-1: #fcfcfb;
+  --surface-2: #f2f1ed;
+  --ink-primary: #0b0b0b;
+  --ink-secondary: #52514e;
+  --ink-muted: #898781;
+  --line: #e1e0d9;
+  --line-strong: #c3c2b7;
+  --ring: rgb(11 11 11 / 0.1);
+
+  /* chart */
+  --chart-surface: #fcfcfb;
+  --chart-grid: #e1e0d9;
+  --chart-axis: #c3c2b7;
+  --chart-band: #eda100;
+  --chart-band-fill: rgb(237 161 0 / 0.34);
+  --chart-trip: #4a3aa7;
+  --chart-trip-fill: rgb(74 58 167 / 0.42);
+  --chart-zone: rgb(74 58 167 / 0.07);
+  --chart-threshold: #4a3aa7;
+  --chart-transition: #898781;
+
+  /* accents */
+  --accent: #2a78d6;
+  --accent-ink: #ffffff;
+  --focus: #2a78d6;
+
+  /* shape, space, motion */
+  --radius-s: 6px;
+  --radius-m: 10px;
+  --radius-l: 16px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 16px;
+  --space-4: 24px;
+  --space-5: 40px;
+  --shadow-1: 0 1px 3px rgb(11 11 11 / 0.08);
+  --shadow-2: 0 8px 24px rgb(11 11 11 / 0.12);
+  --dur-fast: 120ms;
+  --dur-med: 240ms;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  --font-sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+
+    --surface-page: #0d0d0d;
+    --surface-1: #1a1a19;
+    --surface-2: #232322;
+    --ink-primary: #ffffff;
+    --ink-secondary: #c3c2b7;
+    --ink-muted: #898781;
+    --line: #2c2c2a;
+    --line-strong: #383835;
+    --ring: rgb(255 255 255 / 0.1);
+
+    --chart-surface: #1a1a19;
+    --chart-grid: #2c2c2a;
+    --chart-axis: #383835;
+    --chart-band: #c98500;
+    --chart-band-fill: rgb(201 133 0 / 0.38);
+    --chart-trip: #9085e9;
+    --chart-trip-fill: rgb(144 133 233 / 0.42);
+    --chart-zone: rgb(144 133 233 / 0.1);
+    --chart-threshold: #9085e9;
+    --chart-transition: #898781;
+
+    --accent: #3987e5;
+    --accent-ink: #0d0d0d;
+    --focus: #3987e5;
+
+    --shadow-1: 0 1px 3px rgb(0 0 0 / 0.5);
+    --shadow-2: 0 8px 24px rgb(0 0 0 / 0.6);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0ms;
+    --dur-med: 0ms;
+  }
+}
