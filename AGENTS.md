@@ -75,9 +75,12 @@ All code in this repo is **Apache-2.0**. New source files in the Vite projects s
 
 ## Common conventions
 
-- **TypeScript, strict mode** in all three Vite projects. No implicit `any`.
+- **TypeScript, strict mode** in every Vite project. No implicit `any`.
 - **No external UI frameworks** at the monorepo level; each project decides its own dependencies.
-- **No backend, no accounts, no telemetry.** Everything runs in the browser.
+- **No backend, no accounts, no telemetry.** All computation happens in the browser. The one
+  project that talks to the network at runtime is `daylight-map`, which fetches map tiles from
+  CARTO — a deliberate, documented exception. Several projects go further and forbid network
+  access entirely; check the subproject `AGENTS.md` before adding a fetch.
 - **Commits:** imperative subject line, present tense ("Add X", "Fix Y"). Keep `main` always deployable — every push triggers a Pages deploy.
 - **`dist/` and `node_modules/` are gitignored** at both the root and subproject level. Never commit build artifacts.
 
