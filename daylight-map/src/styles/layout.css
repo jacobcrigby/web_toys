@@ -1,0 +1,77 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+
+.app {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-height: 100dvh;
+}
+
+.masthead {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--line);
+  background: var(--surface-1);
+}
+
+.masthead__lede {
+  margin-top: var(--space-1);
+  max-width: 68ch;
+  color: var(--ink-secondary);
+  font-size: 0.9rem;
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: 1fr;
+  min-height: 0;
+}
+
+/*
+ * Map on top on narrow screens, side by side on wide ones. The map column is
+ * sticky so the reader can keep clicking while scrolling the results.
+ */
+@media (min-width: 900px) {
+  .workspace {
+    grid-template-columns: minmax(340px, 1fr) minmax(430px, 560px);
+  }
+
+  .map-pane {
+    position: sticky;
+    top: 0;
+    height: 100dvh;
+  }
+}
+
+.map-pane {
+  position: relative;
+  min-height: 260px;
+  height: min(45dvh, 380px);
+  border-bottom: 1px solid var(--line);
+}
+
+@media (min-width: 900px) {
+  .map-pane {
+    height: 100dvh;
+    border-bottom: 0;
+    border-right: 1px solid var(--line);
+  }
+}
+
+.results {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+.site-footer {
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--line);
+  color: var(--ink-muted);
+  font-size: 0.78rem;
+}
+
+.site-footer p + p {
+  margin-top: var(--space-2);
+}

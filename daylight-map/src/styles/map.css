@@ -1,0 +1,65 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+
+.map {
+  width: 100%;
+  height: 100%;
+  background: var(--surface-2);
+}
+
+/*
+ * The selection marker is a circleMarker, which is pure SVG. Leaflet's default
+ * L.marker resolves its icon PNG at runtime from the stylesheet path and 404s
+ * under a non-root base, so this project never uses it.
+ */
+.selection-marker {
+  fill: var(--accent);
+  fill-opacity: 0.9;
+  stroke: var(--surface-1);
+  stroke-width: 3;
+}
+
+.map-hint {
+  position: absolute;
+  z-index: 500;
+  left: 50%;
+  bottom: var(--space-3);
+  transform: translateX(-50%);
+  padding: 6px var(--space-3);
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--surface-1);
+  color: var(--ink-secondary);
+  box-shadow: var(--shadow-1);
+  font-size: 0.78rem;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* Leaflet chrome, restyled to match the page in both colour schemes. */
+
+.leaflet-container {
+  font-family: var(--font-sans);
+  background: var(--surface-2);
+}
+
+.leaflet-bar a,
+.leaflet-control-attribution {
+  background: var(--surface-1);
+  color: var(--ink-secondary);
+}
+
+.leaflet-bar a {
+  border-bottom-color: var(--line);
+}
+
+.leaflet-bar a:hover {
+  background: var(--surface-2);
+}
+
+.leaflet-control-attribution {
+  font-size: 10px;
+}
+
+.leaflet-control-attribution a {
+  color: var(--accent);
+}
