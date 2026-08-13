@@ -1,0 +1,508 @@
+{
+  "coasters": [
+    {
+      "id": "steel-vengeance",
+      "rcdbId": "15411",
+      "manufacturer": "rocky-mountain",
+      "family": "rmc-ibox",
+      "closeup": "File:Steel Vengeance 07.jpg",
+      "context": "File:Steel Vengeance 03.jpg",
+      "blindAlt": "Steel box-section rails bolted onto a tall timber structure, seen from below"
+    },
+    {
+      "id": "the-joker-discovery-kingdom",
+      "rcdbId": "13422",
+      "manufacturer": "rocky-mountain",
+      "family": "rmc-ibox",
+      "closeup": "File:Six Flags Discovery Kingdom (26760738164).jpg",
+      "context": "File:Six Flags Discovery Kingdom (27092906380).jpg",
+      "blindAlt": "Brightly painted steel track threading through a lattice of wooden beams"
+    },
+    {
+      "id": "goliath-great-america",
+      "rcdbId": "9972",
+      "manufacturer": "rocky-mountain",
+      "family": "rmc-ibox",
+      "closeup": "File:Goliath at Six Flags Great America (14860655336).jpg",
+      "context": "File:Goliath at Six Flags Great America (14697112557).jpg",
+      "blindAlt": "A steel inversion carrying the train over a timber support structure"
+    },
+    {
+      "id": "outlaw-run",
+      "rcdbId": "10582",
+      "manufacturer": "rocky-mountain",
+      "family": "rmc-topper",
+      "closeup": "File:Outlaw Run Brake Run.jpg",
+      "context": "File:Outlaw Run2.jpg",
+      "blindAlt": "A train running on steel-capped laminated wooden track through trees"
+    },
+    {
+      "id": "zadra",
+      "rcdbId": "16184",
+      "manufacturer": "rocky-mountain",
+      "family": "rmc-ibox",
+      "closeup": "File:Zadra (Energylandia) - Zero-G-Stall.jpg",
+      "context": "File:Energylandia - Zadra - 26-05-2019.jpg",
+      "blindAlt": "A long steel arc of track rising above heavy timber bents"
+    },
+    {
+      "id": "wonder-woman-golden-lasso",
+      "rcdbId": "15368",
+      "manufacturer": "rocky-mountain",
+      "family": "rmc-raptor",
+      "closeup": "File:WWGLC 2020.jpg",
+      "context": "File:Wonder Woman Golden Lasso Coaster 1.jpg",
+      "blindAlt": "A train straddling a single narrow rail above water"
+    },
+    {
+      "id": "railblazer",
+      "rcdbId": "15412",
+      "manufacturer": "rocky-mountain",
+      "family": "rmc-raptor",
+      "closeup": "File:RailBlazer 2024-07-16 1.jpg",
+      "context": "File:California's Great America - RailBlazer.jpg",
+      "blindAlt": "A single-rail steel track twisting through an inversion"
+    },
+    {
+      "id": "twisted-timbers",
+      "rcdbId": "15028",
+      "manufacturer": "rocky-mountain",
+      "family": "rmc-ibox",
+      "closeup": "File:Twisted Timbers (Kings Dominion) 1.jpg",
+      "context": "File:Twisted Timbers.jpg",
+      "blindAlt": "Steel track curving through a dense wooden support structure"
+    },
+    {
+      "id": "gold-striker",
+      "rcdbId": "10857",
+      "manufacturer": "gci",
+      "family": "gci-wood",
+      "closeup": "File:California's Great Adventure - Gold Striker track (4008).jpg",
+      "context": "File:California's Great America (14156760970).jpg",
+      "blindAlt": "Densely packed timber bents carrying wooden track overhead"
+    },
+    {
+      "id": "roar",
+      "rcdbId": "485",
+      "manufacturer": "gci",
+      "family": "gci-wood",
+      "closeup": "File:Six Flags Discovery Kingdom - Roar 2.jpg",
+      "context": "File:Six Flags Discovery Kingdom - Roar.jpg",
+      "blindAlt": "A train cresting wooden track inside a timber structure"
+    },
+    {
+      "id": "thunderhead",
+      "rcdbId": "2451",
+      "manufacturer": "gci",
+      "family": "gci-wood",
+      "closeup": "File:Thunderhead (Dollywood) 03.JPG",
+      "context": "File:Thunderhead (Dollywood) 02.JPG",
+      "blindAlt": "A train on wooden track weaving through its own timber structure"
+    },
+    {
+      "id": "prowler",
+      "rcdbId": "4296",
+      "manufacturer": "gci",
+      "family": "gci-wood",
+      "closeup": "File:WOF-Prowler1.JPG",
+      "context": "File:WOF-Prowler2.JPG",
+      "blindAlt": "Wooden track banking hard above a lattice of timber supports"
+    },
+    {
+      "id": "troy",
+      "rcdbId": "3589",
+      "manufacturer": "gci",
+      "family": "gci-wood",
+      "closeup": "File:Toverland Troy Costr.jpg",
+      "context": "File:Troy.JPG",
+      "blindAlt": "Bare wooden coaster structure under construction, no track surface yet"
+    },
+    {
+      "id": "renegade",
+      "rcdbId": "3660",
+      "manufacturer": "gci",
+      "family": "gci-wood",
+      "closeup": "File:Renegade 1st Drop.jpg",
+      "context": "File:Renegade Drop.jpg",
+      "blindAlt": "A train climbing wooden track supported on timber bents"
+    },
+    {
+      "id": "wicker-man",
+      "rcdbId": "15029",
+      "manufacturer": "gci",
+      "family": "gci-wood",
+      "closeup": "File:Speeding Down The Track (49335183388).jpg",
+      "context": "File:The Wicker Man Thunders By (49335644276).jpg",
+      "blindAlt": "A train on wooden track running low through timber supports"
+    },
+    {
+      "id": "wood-coaster-mountain-flyer",
+      "rcdbId": "9039",
+      "manufacturer": "gci",
+      "family": "gci-wood",
+      "closeup": "File:Knight Valley - 5764345570.jpg",
+      "context": "File:Knight Valley - 5764351498.jpg",
+      "blindAlt": "Wooden track and timber bents built into a hillside"
+    },
+    {
+      "id": "yukon-striker",
+      "rcdbId": "16021",
+      "manufacturer": "bolliger-mabillard",
+      "family": "bm-box-spine",
+      "closeup": "File:Yukon Striker and Vortex at Canada's Wonderland, May 2019.jpg",
+      "context": "File:Yukon Striker's lift and drop (31582221588).jpg",
+      "blindAlt": "Looking up at a steel box spine carrying two round rails on flat plates"
+    },
+    {
+      "id": "mako",
+      "rcdbId": "17030",
+      "manufacturer": "bolliger-mabillard",
+      "family": "bm-box-spine",
+      "closeup": "File:Emperor (SeaWorld San Diego) 1.jpg",
+      "context": "File:Emperor (SeaWorld San Diego) 3.jpg",
+      "blindAlt": "A deep steel box spine sweeping through a wide banked curve"
+    },
+    {
+      "id": "orion",
+      "rcdbId": "11437",
+      "manufacturer": "bolliger-mabillard",
+      "family": "bm-box-spine",
+      "closeup": "File:The drop of the roller coaster Orion, at Kings Island.png",
+      "context": "File:Orion (Kings Island) 1.jpg",
+      "blindAlt": "A heavy steel spine climbing a long straight ascent"
+    },
+    {
+      "id": "dragons-run",
+      "rcdbId": "6605",
+      "manufacturer": "bolliger-mabillard",
+      "family": "bm-inverted",
+      "closeup": "File:LZTR (Pre-MCBR Drop) (5).JPG",
+      "context": "File:LZTR (Second Loop) (8).JPG",
+      "blindAlt": "A train hanging beneath an overhead steel beam, legs free"
+    },
+    {
+      "id": "monster-gronalund",
+      "rcdbId": "15212",
+      "manufacturer": "bolliger-mabillard",
+      "family": "bm-box-spine",
+      "closeup": "File:Gr\u00f6na Lund, Monster, febr 2021c.jpg",
+      "context": "File:Gr\u00f6na Lund, Allm\u00e4nna gr\u00e4nd, Stockholm, 20240106 - 08.jpg",
+      "blindAlt": "Steel box-spine track under construction beside a tower crane"
+    },
+    {
+      "id": "decepticoaster",
+      "rcdbId": "17349",
+      "manufacturer": "bolliger-mabillard",
+      "family": "bm-box-spine",
+      "closeup": "File:\u5317\u4eac\u73af\u7403\u5f71\u57ce\u9738\u5929\u864e\u8fc7\u5c71\u8f66 04.jpg",
+      "context": "File:\u5317\u4eac\u73af\u7403\u5f71\u57ce\u9738\u5929\u864e\u8fc7\u5c71\u8f66 03.jpg",
+      "blindAlt": "A steel spine and its walkway seen close against a pale sky"
+    },
+    {
+      "id": "pipeline-the-surf-coaster",
+      "rcdbId": "20042",
+      "manufacturer": "bolliger-mabillard",
+      "family": "bm-box-spine",
+      "closeup": "File:Pipeline The Surf Coaster's over-banked turn.jpg",
+      "context": "File:Pipeline The Surf Coaster 2.jpg",
+      "blindAlt": "Blue steel track curving through a tight inversion"
+    },
+    {
+      "id": "wrath-of-rakshasa",
+      "rcdbId": "22031",
+      "manufacturer": "bolliger-mabillard",
+      "family": "bm-box-spine",
+      "closeup": "File:Wrath of Rakshasa holding brake drop.jpg",
+      "context": "File:Wrath of Rakshasa exiting dive loop.jpg",
+      "blindAlt": "A train cresting a steep blue steel drop"
+    },
+    {
+      "id": "hyperion",
+      "rcdbId": "14462",
+      "manufacturer": "intamin",
+      "family": "intamin-box-spine",
+      "closeup": "File:Hyperion Track2.jpg",
+      "context": "File:Hyperion, Energylandia - 2018 Aug 06.jpg",
+      "blindAlt": "A slim steel spine on square-section legs seen from underneath"
+    },
+    {
+      "id": "taiga",
+      "rcdbId": "16138",
+      "manufacturer": "intamin",
+      "family": "intamin-box-spine",
+      "closeup": "File:Taiga Linnanm\u00e4ki (20190629) 5.jpg",
+      "context": "File:Taiga Linnanm\u00e4ki (20190629) 3.jpg",
+      "blindAlt": "A narrow steel spine passing close overhead against grey cloud"
+    },
+    {
+      "id": "flying-aces",
+      "rcdbId": "12772",
+      "manufacturer": "intamin",
+      "family": "intamin-box-spine",
+      "closeup": "File:Flying Aces 2.jpg",
+      "context": null,
+      "blindAlt": "White steel track on splayed tubular legs curving low over concrete"
+    },
+    {
+      "id": "sandys-blasting-bronco",
+      "rcdbId": "16793",
+      "manufacturer": "intamin",
+      "family": "intamin-box-spine",
+      "closeup": "File:-i---i- (48973591393).jpg",
+      "context": "File:-i---i- (48974306296).jpg",
+      "blindAlt": "Pale green and orange steel track crossing under a roof structure"
+    },
+    {
+      "id": "red-force",
+      "rcdbId": "10698",
+      "manufacturer": "intamin",
+      "family": "intamin-box-spine",
+      "closeup": "File:Vu de dessous.jpg",
+      "context": "File:Vertical Accelerator.jpg",
+      "blindAlt": "A tall red lattice tower carrying track straight up into the sun"
+    },
+    {
+      "id": "hagrids-magical-creatures-motorbike-adventure",
+      "rcdbId": "15330",
+      "manufacturer": "intamin",
+      "family": "intamin-box-spine",
+      "closeup": "File:Hagrid's Motorbike from Queue 2.jpg",
+      "context": "File:Hagrid's Motorbike from Queue 1.jpg",
+      "blindAlt": "Low steel track winding between trees and water"
+    },
+    {
+      "id": "loopen",
+      "rcdbId": "1043",
+      "manufacturer": "vekoma",
+      "family": "vekoma-classic",
+      "closeup": "File:Loopen & Enterprise p\u00e5 TusenFryd.JPG",
+      "context": "File:Loopen roller coaster Oslo.jpg",
+      "blindAlt": "Red steel track looping tightly above a lattice of supports"
+    },
+    {
+      "id": "freedom-flyer",
+      "rcdbId": "10347",
+      "manufacturer": "vekoma",
+      "family": "vekoma-classic",
+      "closeup": "File:Fun Spot America Orlando Freedom Flyer Coaster.JPG",
+      "context": "File:Fun Spot America Orlando Freedom Flyer ride 2.jpg",
+      "blindAlt": "Blue and yellow track with the train hanging below the rail"
+    },
+    {
+      "id": "tron-lightcycle-power-run",
+      "rcdbId": "6615",
+      "manufacturer": "vekoma",
+      "family": "vekoma-modern",
+      "closeup": "File:Tron Lightcycles Power Run (29510932862).jpg",
+      "context": "File:Tron Lightcycles Power Run (28995514064).jpg",
+      "blindAlt": "A lit launch track running away into a dark enclosure"
+    },
+    {
+      "id": "raik",
+      "rcdbId": "13689",
+      "manufacturer": "vekoma",
+      "family": "vekoma-classic",
+      "closeup": "File:Raik-1.jpg",
+      "context": "File:Raik-3.jpg",
+      "blindAlt": "Grey steel track and lift structure against a rock facade"
+    },
+    {
+      "id": "jungle-racing",
+      "rcdbId": "2982",
+      "manufacturer": "vekoma",
+      "family": "vekoma-classic",
+      "closeup": "File:Happy Valley Beijing - 29297377952.jpg",
+      "context": "File:Happy Valley Beijing - 29325958231.jpg",
+      "blindAlt": "A train on low steel track running past rockwork"
+    },
+    {
+      "id": "toos-express",
+      "rcdbId": "1041",
+      "manufacturer": "vekoma",
+      "family": "vekoma-classic",
+      "closeup": "File:Toos Expres.jpg",
+      "context": "File:Toverland-Boomerang.jpg",
+      "blindAlt": "Brightly painted indoor steel track crossing over itself"
+    },
+    {
+      "id": "python",
+      "rcdbId": "897",
+      "manufacturer": "arrow-dynamics",
+      "family": "arrow-tubular",
+      "closeup": "File:Pythonlooping.JPG",
+      "context": "File:Python lift hill.JPG",
+      "blindAlt": "A round pipe spine carrying a train through a circular vertical loop"
+    },
+    {
+      "id": "anaconda",
+      "rcdbId": "92",
+      "manufacturer": "arrow-dynamics",
+      "family": "arrow-tubular",
+      "closeup": "File:PKD-Anaconda.jpg",
+      "context": "File:Anaconda (Kings Dominion) 3.jpg",
+      "blindAlt": "Red tubular track with flat rungs between the rails, on slim green columns"
+    },
+    {
+      "id": "corkscrew",
+      "rcdbId": "118",
+      "manufacturer": "arrow-dynamics",
+      "family": "arrow-tubular",
+      "closeup": "File:Corkscrew (Valleyfair).jpg",
+      "context": "File:Corkscrew (Valleyfair) 2016 1.jpg",
+      "blindAlt": "Tubular steel track spiralling tightly around its own axis"
+    },
+    {
+      "id": "big-bad-wolf",
+      "rcdbId": "111",
+      "manufacturer": "arrow-dynamics",
+      "family": "arrow-tubular",
+      "closeup": "File:Big bad wolf last drop.jpeg",
+      "context": "File:Big Bad Wolf final drop and track (train at top).jpg",
+      "blindAlt": "Suspended tubular track crossing above water on plain grey columns"
+    },
+    {
+      "id": "adventure-express",
+      "rcdbId": "70",
+      "manufacturer": "arrow-dynamics",
+      "family": "arrow-mine-train",
+      "closeup": "File:Adventure Express 2.jpg",
+      "context": "File:KI AdventureExpressStation.jpg",
+      "blindAlt": "Low tubular track running along a long timber trestle"
+    },
+    {
+      "id": "x2",
+      "rcdbId": "750",
+      "manufacturer": "arrow-dynamics",
+      "family": "arrow-tubular",
+      "closeup": "File:X2 at Six Flags Magic Mountain 08.jpg",
+      "context": "File:X2 at Six Flags Magic Mountain 07.jpg",
+      "blindAlt": "Tubular steel track and heavy grey supports seen from directly below"
+    },
+    {
+      "id": "blue-fire-megacoaster",
+      "rcdbId": "4074",
+      "manufacturer": "mack-rides",
+      "family": "mack-box-spine",
+      "closeup": "File:BlueFireLooping.JPG",
+      "context": "File:Blue fire Europa-park loop.jpg",
+      "blindAlt": "A mid-depth blue box spine looping above tubular supports"
+    },
+    {
+      "id": "euro-mir",
+      "rcdbId": "972",
+      "manufacturer": "mack-rides",
+      "family": "mack-box-spine",
+      "closeup": "File:Euromir.jpg",
+      "context": "File:European tour 2003 198.jpg",
+      "blindAlt": "Steel track curving tightly around a mirrored tower"
+    },
+    {
+      "id": "pegasus",
+      "rcdbId": "3403",
+      "manufacturer": "mack-rides",
+      "family": "mack-box-spine",
+      "closeup": "File:Pegasus europapark.jpg",
+      "context": "File:Europa-Park - Pegasus (06).JPG",
+      "blindAlt": "Steel track running over a low timber and steel structure"
+    },
+    {
+      "id": "poseidon",
+      "rcdbId": "1891",
+      "manufacturer": "mack-rides",
+      "family": "mack-box-spine",
+      "closeup": "File:Europa-Park - Pos\u00e9idon (22).JPG",
+      "context": "File:Europa-Park - Pos\u00e9idon (18).JPG",
+      "blindAlt": "Blue steel track on white tubular legs rising above trees"
+    },
+    {
+      "id": "matterhorn-blitz",
+      "rcdbId": "971",
+      "manufacturer": "mack-rides",
+      "family": "mack-box-spine",
+      "closeup": "File:Europa-Park - Matterhorn Blitz (05).JPG",
+      "context": "File:Europa-Park - Matterhorn Blitz (02).JPG",
+      "blindAlt": "Steel track spiralling around a tall tubular column"
+    },
+    {
+      "id": "manta-seaworld-san-diego",
+      "rcdbId": "9819",
+      "manufacturer": "mack-rides",
+      "family": "mack-box-spine",
+      "closeup": "File:Ygmta 3b (9758970761).jpg",
+      "context": "File:MantaEntranceSanDiego.jpg",
+      "blindAlt": "A train on blue steel track carried on splayed tubular legs"
+    },
+    {
+      "id": "helix",
+      "rcdbId": "11048",
+      "manufacturer": "mack-rides",
+      "family": "mack-box-spine",
+      "closeup": "File:Helix, Liseberg 2014-04-26 01.jpg",
+      "context": null,
+      "blindAlt": "A train cresting steel track on a hillside above a city"
+    },
+    {
+      "id": "takabisha",
+      "rcdbId": "9795",
+      "manufacturer": "gerstlauer",
+      "family": "gerstlauer-euro-fighter",
+      "closeup": "File:Roller coaster in a park (Unsplash).jpg",
+      "context": "File:Takabisha under construction 2.jpg",
+      "blindAlt": "Grey steel track with triangular gussets folded into a compact tangle"
+    },
+    {
+      "id": "vild-svinet",
+      "rcdbId": "2163",
+      "manufacturer": "gerstlauer",
+      "family": "gerstlauer-euro-fighter",
+      "closeup": "File:Vildsvinet BonBon-Land.jpg",
+      "context": null,
+      "blindAlt": "A train cresting a pale steel spine against a white sky"
+    },
+    {
+      "id": "rage",
+      "rcdbId": "3573",
+      "manufacturer": "gerstlauer",
+      "family": "gerstlauer-euro-fighter",
+      "closeup": "File:Adventureisland047.JPG",
+      "context": null,
+      "blindAlt": "Yellow steel track looping above magenta supports"
+    },
+    {
+      "id": "speed-no-limits",
+      "rcdbId": "2721",
+      "manufacturer": "gerstlauer",
+      "family": "gerstlauer-euro-fighter",
+      "closeup": "File:Speed-Oakwood-3.jpg",
+      "context": null,
+      "blindAlt": "A train on steel track at the top of a near-vertical lift"
+    },
+    {
+      "id": "huracan",
+      "rcdbId": "9119",
+      "manufacturer": "gerstlauer",
+      "family": "gerstlauer-euro-fighter",
+      "closeup": "File:Huracan (Belantis) (2).jpg",
+      "context": "File:2016 WGT 003 Belantis.jpg",
+      "blindAlt": "A vertical steel lift structure silhouetted against the sun"
+    },
+    {
+      "id": "dare-devil-dive",
+      "rcdbId": "9430",
+      "manufacturer": "gerstlauer",
+      "family": "gerstlauer-euro-fighter",
+      "closeup": "File:Dare Devil Dive at Six Flags Over Georgia.jpg",
+      "context": "File:Dare Devil Dive (Six Flags Over Georgia) 2.jpg",
+      "blindAlt": "Red steel track and yellow supports packed into a small footprint"
+    },
+    {
+      "id": "spongebob-squarepants-rock-bottom-plunge",
+      "rcdbId": "3727",
+      "manufacturer": "gerstlauer",
+      "family": "gerstlauer-euro-fighter",
+      "closeup": "File:Mall of America 21 - theme park.jpg",
+      "context": "File:Mall of America 03 - theme park.jpg",
+      "blindAlt": "Green steel track looping tightly under a glass roof"
+    }
+  ]
+}

@@ -4,6 +4,7 @@ packages:
   - 'marblegame'
   - 'battleship'
   - 'daylight-map'
+  - 'coaster-track-quiz'
   - 'packages/*'
 allowBuilds:
   '@firebase/util': true

@@ -21,6 +21,7 @@ web_toys/
   marblegame/                 # Vite + Babylon.js + Havok physics game (see its AGENTS.md)
   battleship/                 # Vite + TypeScript game (see its AGENTS.md)
   daylight-map/               # Vite + TypeScript + Leaflet map (see its AGENTS.md)
+  coaster-track-quiz/         # Vite + TypeScript quiz — identify coaster makers from track
   microcosm/                  # Static HTML simulation — no build step, no package.json
   opensauce/                  # ARCHIVED static HTML schedule planner — deployed but unlisted; no build step, no package.json
   switch-mode/                # Static HTML switch-mode converter visualization — no build step, no package.json
@@ -64,6 +65,7 @@ GitHub Actions (`.github/workflows/deploy.yml`) runs on every push to `main`:
    - `dist/opensauce/` ← copied as-is (archived; unlisted)
    - `dist/daylight-map/` ← from `daylight-map/dist/`
    - `dist/switch-mode/` ← copied as-is
+   - `dist/coaster-track-quiz/` ← from `coaster-track-quiz/dist/`
 4. Deploys `dist/` to GitHub Pages
 
 Each Vite project's `base` is set to `/web_toys/<project>/` so asset URLs resolve correctly.
@@ -81,10 +83,12 @@ All code in this repo is **Apache-2.0**. New source files in the Vite projects s
 
 - **TypeScript, strict mode** in every Vite project. No implicit `any`.
 - **No external UI frameworks** at the monorepo level; each project decides its own dependencies.
-- **No backend, no accounts, no telemetry.** All computation happens in the browser. The one
-  project that talks to the network at runtime is `daylight-map`, which fetches map tiles from
-  CARTO — a deliberate, documented exception. Several projects go further and forbid network
-  access entirely; check the subproject `AGENTS.md` before adding a fetch.
+- **No backend, no accounts, no telemetry.** All computation happens in the browser. Two
+  projects touch the network at runtime, both deliberate and documented exceptions:
+  `daylight-map` fetches map tiles from CARTO, and `coaster-track-quiz` hotlinks
+  CC-licensed track photographs from Wikimedia Commons (`<img>` requests only — it makes no
+  `fetch`/XHR calls of any kind). Several projects go further and forbid network access
+  entirely; check the subproject `AGENTS.md` before adding a fetch.
 - **Commits:** imperative subject line, present tense ("Add X", "Fix Y"). Keep `main` always deployable — every push triggers a Pages deploy.
 - **`dist/` and `node_modules/` are gitignored** at both the root and subproject level. Never commit build artifacts.
 
@@ -99,6 +103,7 @@ Read the project's own `AGENTS.md` — it contains the architecture, commands, c
 | marblegame | `marblegame/AGENTS.md` |
 | battleship | `battleship/AGENTS.md` |
 | daylight-map | `daylight-map/AGENTS.md` |
+| coaster-track-quiz | `coaster-track-quiz/AGENTS.md` |
 | microcosm | `microcosm/AGENTS.md` |
 | opensauce (archived) | `opensauce/AGENTS.md` |
 | switch-mode | `switch-mode/AGENTS.md` |

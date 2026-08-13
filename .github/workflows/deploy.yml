@@ -50,6 +50,7 @@ jobs:
           cp -r opensauce dist/opensauce
           cp -r daylight-map/dist dist/daylight-map
           cp -r switch-mode dist/switch-mode
+          cp -r coaster-track-quiz/dist dist/coaster-track-quiz
 
       - uses: actions/configure-pages@v4
 
