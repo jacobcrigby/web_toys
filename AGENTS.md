@@ -23,9 +23,10 @@ web_toys/
   daylight-map/               # Vite + TypeScript + Leaflet map (see its AGENTS.md)
   microcosm/                  # Static HTML simulation — no build step, no package.json
   opensauce/                  # Static HTML schedule planner — no build step, no package.json
+  switch-mode/                # Static HTML switch-mode converter visualization — no build step, no package.json
 ```
 
-`microcosm` and `opensauce` are deliberately not pnpm workspaces — each is a single self-contained HTML file and ships as-is.
+`microcosm`, `opensauce` and `switch-mode` are deliberately not pnpm workspaces — each is a single self-contained HTML file and ships as-is.
 
 ## Package manager: pnpm workspaces
 
@@ -60,6 +61,7 @@ GitHub Actions (`.github/workflows/deploy.yml`) runs on every push to `main`:
    - `dist/battleship/` ← from `battleship/dist/`
    - `dist/opensauce/` ← copied as-is
    - `dist/daylight-map/` ← from `daylight-map/dist/`
+   - `dist/switch-mode/` ← copied as-is
 4. Deploys `dist/` to GitHub Pages
 
 Each Vite project's `base` is set to `/web_toys/<project>/` so asset URLs resolve correctly.
@@ -97,3 +99,4 @@ Read the project's own `AGENTS.md` — it contains the architecture, commands, c
 | daylight-map | `daylight-map/AGENTS.md` |
 | microcosm | `microcosm/AGENTS.md` |
 | opensauce | `opensauce/AGENTS.md` |
+| switch-mode | `switch-mode/AGENTS.md` |

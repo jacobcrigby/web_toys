@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Switch-Mode Converter</title>
+  <meta name="description" content="An interactive, slow-motion simulation of buck, boost and buck-boost switch-mode power converters." />
+  <meta name="theme-color" content="#6750A4" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#141218" media="(prefers-color-scheme: dark)" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='28' fill='%236750A4'/><path d='M58 12 28 56h20l-8 32 32-46H52z' fill='%23EADDFF'/></svg>" />
+  <style>
+    :root {
+      --primary: #6750A4;
+      --on-primary: #FFFFFF;
+      --primary-container: #EADDFF;
+      --on-primary-container: #21005D;
+      --secondary-container: #E8DEF8;
+      --background: #FEF7FF;
+      --surface: #F7F2FA;
+      --surface-high: #ECE6F0;
+      --outline: #79747E;
+      --outline-variant: #CAC4D0;
+      --text: #1D1B20;
+      --text-variant: #49454F;
+      --wire: #3B3842;
+      --on-color: #E0701B;     /* switch-on (charging) loop */
+      --off-color: #0E8C8C;    /* switch-off (freewheel) loop */
+      --load-color: #3E8E3E;   /* load current */
+      --gate-color: #6750A4;
+      --vl-color: #B3261E;
+      --scope-bg: #FFFFFF;
+      --scope-grid: rgba(0,0,0,0.08);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --primary: #D0BCFF;
+        --on-primary: #381E72;
+        --primary-container: #4F378B;
+        --on-primary-container: #EADDFF;
+        --secondary-container: #4A4458;
+        --background: #141218;
+        --surface: #1D1B20;
+        --surface-high: #2B2930;
+        --outline: #938F99;
+        --outline-variant: #49454F;
+        --text: #E6E0E9;
+        --text-variant: #CAC4D0;
+        --wire: #D6D0DC;
+        --on-color: #FFA257;
+        --off-color: #4FD1D1;
+        --load-color: #7FD17F;
+        --gate-color: #D0BCFF;
+        --vl-color: #FF8A80;
+        --scope-bg: #0F0E12;
+        --scope-grid: rgba(255,255,255,0.08);
+      }
+    }
+    * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0;
+      font-family: 'Google Sans', 'Roboto', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      background: var(--background);
+      color: var(--text);
+      line-height: 1.45;
+      -webkit-font-smoothing: antialiased;
+    }
+    .page { max-width: 1240px; margin: 0 auto; padding: 20px 16px 40px; }
+    header.top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+    header.top a.back { color: var(--primary); text-decoration: none; font-weight: 600; font-size: .9rem; }
+    header.top h1 { margin: 0; font-size: clamp(1.4rem, 4vw, 2rem); font-weight: 600; flex: 1; min-width: 200px; }
+    .seg { display: inline-flex; border: 1px solid var(--outline); border-radius: 999px; overflow: hidden; }
+    .seg button {
+      border: 0; background: transparent; color: var(--text); font: inherit; font-size: .92rem;
+      padding: 8px 16px; cursor: pointer; font-weight: 500;
+    }
+    .seg button + button { border-left: 1px solid var(--outline); }
+    .seg button[aria-pressed="true"] { background: var(--secondary-container); font-weight: 700; }
+    .seg button:focus-visible { outline: 2px solid var(--primary); outline-offset: -3px; }
+
+    .layout { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(280px, 1fr); gap: 16px; }
+    @media (max-width: 900px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+    .card {
+      background: var(--surface); border: 1px solid var(--outline-variant);
+      border-radius: 20px; padding: 16px; min-width: 0;
+    }
+    .card h2 { margin: 0 0 8px; font-size: 1rem; font-weight: 600; letter-spacing: .2px; }
+    svg#schem { width: 100%; height: auto; display: block; }
+    svg#schem .wire { stroke: var(--wire); stroke-width: 2.2; fill: none; stroke-linejoin: round; stroke-linecap: round; }
+    svg#schem .comp { stroke: var(--wire); stroke-width: 2.4; fill: none; stroke-linejoin: round; stroke-linecap: round; }
+    svg#schem .body { fill: var(--surface); }
+    svg#schem .junction { fill: var(--wire); }
+    svg#schem text { fill: var(--text); font-size: 14px; font-family: inherit; }
+    svg#schem text.sub { fill: var(--text-variant); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+    svg#schem text.name { font-weight: 700; }
+    svg#schem .glow { fill: none; stroke-width: 12; stroke-linejoin: round; stroke-linecap: round; }
+    svg#schem .dots { fill: none; stroke-width: 6; stroke-linecap: round; stroke-dasharray: 0 18; }
+    .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: .85rem; color: var(--text-variant); margin-top: 6px; }
+    .legend span::before { content: ""; display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; background: var(--c); }
+
+    .phase {
+      margin-top: 12px; padding: 12px 14px; border-radius: 14px; background: var(--surface-high);
+      min-height: 84px; border-left: 5px solid var(--phase-c, var(--outline));
+    }
+    .phase b { display: block; margin-bottom: 2px; }
+    .phase p { margin: 0; font-size: .94rem; color: var(--text-variant); }
+
+    .controls { display: flex; flex-direction: column; gap: 12px; }
+    .ctl label { display: flex; justify-content: space-between; gap: 8px; font-size: .9rem; font-weight: 500; }
+    .ctl label output { font-variant-numeric: tabular-nums; color: var(--primary); font-weight: 700; }
+    .ctl input[type=range] { width: 100%; accent-color: var(--primary); margin: 4px 0 0; }
+    .ctl input[type=range]:disabled { opacity: .55; }
+    .ctl small { color: var(--text-variant); font-size: .78rem; }
+    .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .check { display: flex; align-items: center; gap: 8px; font-size: .9rem; cursor: pointer; }
+    .check input { width: 18px; height: 18px; accent-color: var(--primary); }
+    button.btn {
+      font: inherit; font-size: .88rem; font-weight: 600; border-radius: 999px; padding: 8px 14px; cursor: pointer;
+      border: 1px solid var(--outline); background: transparent; color: var(--primary);
+    }
+    button.btn.filled { background: var(--primary); color: var(--on-primary); border-color: var(--primary); }
+    button.btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+    hr { border: 0; border-top: 1px solid var(--outline-variant); margin: 2px 0; width: 100%; }
+
+    .stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: 8px; margin-top: 16px; }
+    .stat { background: var(--surface); border: 1px solid var(--outline-variant); border-radius: 14px; padding: 8px 12px; }
+    .stat .k { font-size: .75rem; color: var(--text-variant); text-transform: uppercase; letter-spacing: .5px; }
+    .stat .v { font-size: 1.15rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .stat .v.small { font-size: 1rem; }
+
+    .scope-card { margin-top: 16px; }
+    .scope-head { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; }
+    .scope-head .ctl { min-width: 220px; flex: 1; max-width: 360px; }
+    canvas#scope { width: 100%; height: 400px; display: block; border-radius: 12px; background: var(--scope-bg); margin-top: 8px; }
+    @media (max-width: 600px) { canvas#scope { height: 340px; } }
+
+    .explain { margin-top: 16px; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+    .explain p { margin: 0 0 8px; font-size: .94rem; color: var(--text-variant); }
+    .explain p:last-child { margin-bottom: 0; }
+    .formula { font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; background: var(--surface-high); padding: 2px 6px; border-radius: 6px; color: var(--text); font-size: .88rem; }
+    footer { text-align: center; color: var(--text-variant); font-size: .85rem; margin-top: 28px; }
+    footer a { color: var(--primary); text-decoration: none; font-weight: 600; }
+  </style>
+</head>
+<body>
+<div class="page">
+  <header class="top">
+    <a class="back" href="../">← Web Toys</a>
+    <h1>⚡ Switch-Mode Converter</h1>
+    <div class="seg" role="group" aria-label="Converter topology">
+      <button type="button" data-topo="buck" aria-pressed="true">Buck</button>
+      <button type="button" data-topo="boost" aria-pressed="false">Boost</button>
+      <button type="button" data-topo="buckboost" aria-pressed="false">Buck-Boost</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <section class="card" aria-label="Circuit">
+      <h2 id="schem-title">Buck converter (step-down)</h2>
+      <svg id="schem" viewBox="0 0 660 290" role="img" aria-labelledby="schem-title"></svg>
+      <div class="legend">
+        <span style="--c: var(--on-color)">Switch ON current</span>
+        <span style="--c: var(--off-color)">Switch OFF (diode) current</span>
+        <span style="--c: var(--load-color)">Load current</span>
+      </div>
+      <div class="phase" id="phase" aria-live="polite"><b id="phase-title"></b><p id="phase-text"></p></div>
+    </section>
+
+    <section class="card controls" aria-label="Controls">
+      <div class="row">
+        <button type="button" class="btn filled" id="btn-pause">Pause</button>
+        <button type="button" class="btn" id="btn-step">Step 1 cycle</button>
+        <button type="button" class="btn" id="btn-reset" title="Discharge everything and watch it start up">Cold start</button>
+        <button type="button" class="btn" id="btn-settle" title="Fast-forward to steady state">Settle</button>
+      </div>
+      <div class="ctl">
+        <label for="s-speed"><span>Playback speed</span> <output id="o-speed"></output></label>
+        <input type="range" id="s-speed" min="0" max="1000" />
+        <small id="speed-note"></small>
+      </div>
+      <hr />
+      <div class="ctl">
+        <label for="s-duty"><span>Duty cycle D</span> <output id="o-duty"></output></label>
+        <input type="range" id="s-duty" min="2" max="95" step="1" />
+        <small>Fraction of each cycle the switch is closed.</small>
+      </div>
+      <label class="check"><input type="checkbox" id="c-reg" /> <span>Regulate V<sub>out</sub> automatically (feedback)</span></label>
+      <div class="ctl" id="reg-ctl" hidden>
+        <label for="s-vref"><span>Target |V<sub>out</sub>|</span> <output id="o-vref"></output></label>
+        <input type="range" id="s-vref" min="0" max="1000" />
+      </div>
+      <div class="ctl">
+        <label for="s-vin"><span>Input voltage V<sub>in</sub></span> <output id="o-vin"></output></label>
+        <input type="range" id="s-vin" min="1" max="48" step="0.5" />
+      </div>
+      <div class="ctl">
+        <label for="s-r"><span>Load resistance R</span> <output id="o-r"></output></label>
+        <input type="range" id="s-r" min="0" max="1000" />
+      </div>
+      <div class="ctl">
+        <label for="s-f"><span>Switching frequency f<sub>sw</sub></span> <output id="o-f"></output></label>
+        <input type="range" id="s-f" min="0" max="1000" />
+      </div>
+      <div class="ctl">
+        <label for="s-l"><span>Inductance L</span> <output id="o-l"></output></label>
+        <input type="range" id="s-l" min="0" max="1000" />
+      </div>
+      <div class="ctl">
+        <label for="s-c"><span>Capacitance C</span> <output id="o-c"></output></label>
+        <input type="range" id="s-c" min="0" max="1000" />
+      </div>
+      <label class="check"><input type="checkbox" id="c-loss" /> <span>Real-world losses (0.45 V diode, 50 mΩ switch &amp; inductor)</span></label>
+    </section>
+  </div>
+
+  <div class="stats" aria-label="Measurements">
+    <div class="stat"><div class="k">V<sub>out</sub> (avg)</div><div class="v" id="st-vout">–</div></div>
+    <div class="stat"><div class="k">Ideal V<sub>out</sub></div><div class="v" id="st-ideal">–</div></div>
+    <div class="stat"><div class="k">V<sub>out</sub> ripple</div><div class="v" id="st-vrip">–</div></div>
+    <div class="stat"><div class="k">I<sub>L</sub> (avg)</div><div class="v" id="st-il">–</div></div>
+    <div class="stat"><div class="k">I<sub>L</sub> ripple</div><div class="v" id="st-irip">–</div></div>
+    <div class="stat"><div class="k">Load current</div><div class="v" id="st-iload">–</div></div>
+    <div class="stat"><div class="k">Mode</div><div class="v small" id="st-mode">–</div></div>
+    <div class="stat"><div class="k">Efficiency</div><div class="v" id="st-eff">–</div></div>
+  </div>
+
+  <section class="card scope-card" aria-label="Oscilloscope">
+    <div class="scope-head">
+      <h2>Oscilloscope</h2>
+      <div class="ctl">
+        <label for="s-win"><span>Time window</span> <output id="o-win"></output></label>
+        <input type="range" id="s-win" min="0" max="1000" />
+      </div>
+    </div>
+    <canvas id="scope" aria-label="Waveforms of gate drive, switch node voltage, inductor voltage, inductor current and output voltage"></canvas>
+  </section>
+
+  <div class="explain">
+    <section class="card">
+      <h2 id="ex-title">How it works</h2>
+      <div id="ex-body"></div>
+    </section>
+    <section class="card">
+      <h2>The key idea: volt-second balance</h2>
+      <p>An inductor resists changes in current: its current ramps at a rate of <span class="formula">V<sub>L</sub> / L</span>. Positive V<sub>L</sub> → current rises; negative → it falls.</p>
+      <p>In steady state the current must end each cycle where it started, so the <em>area</em> under the V<sub>L</sub> trace above zero (switch on) must equal the area below zero (switch off). That single fact fixes the output voltage — watch the red V<sub>L</sub> trace, and try changing D while the sim runs to see the areas fall out of balance until V<sub>out</sub> catches up.</p>
+      <p>The capacitor smooths what's left of the ripple. Make L small or the load light (high R) and the inductor current will hit zero every cycle — <strong>discontinuous mode</strong> — where the simple formula stops being true.</p>
+    </section>
+  </div>
+
+  <footer>
+    Idealized circuit simulation — values are illustrative. &nbsp;·&nbsp;
+    <a href="../">More web toys</a> &nbsp;·&nbsp;
+    <a href="https://github.com/jacobcrigby/web_toys">Source on GitHub</a>
+  </footer>
+</div>
+
+<script>
+// SPDX-License-Identifier: Apache-2.0
+(() => {
+'use strict';
+
+// ---------------------------------------------------------------- parameters
+const SPP = 200;                 // simulation steps per switching period
+const CAP = 500 * SPP;           // scope ring-buffer capacity (samples)
+const LOSS = { ron: 0.05, dcr: 0.05, vd: 0.45 };
+
+const P = {
+  topo: 'buck', vin: 12, duty: 0.42, fsw: 100e3, L: 33e-6, C: 47e-6, R: 5,
+  losses: false, regulate: false, vref: 5, pps: 2, periods: 3, paused: false,
+};
+const DEFAULT_DUTY = { buck: 0.42, boost: 0.5, buckboost: 0.5 };
+
+// log-slider helpers: slider 0..1000 ↔ [lo, hi] on a log scale
+const logMap = (lo, hi) => ({
+  to: (s) => lo * Math.pow(hi / lo, s / 1000),
+  from: (v) => Math.round(1000 * Math.log(v / lo) / Math.log(hi / lo)),
+});
+const M = {
+  speed: logMap(0.25, 5000), r: logMap(1, 200), f: logMap(20e3, 500e3),
+  l: logMap(1e-6, 470e-6), c: logMap(1e-6, 1000e-6), win: logMap(1, 500),
+};
+
+// ---------------------------------------------------------------- state
+const S = {
+  iL: 0, v: 0,            // inductor current (A), output-capacitor voltage magnitude (V)
+  k: 0,                   // step index within the current period
+  dL: P.duty,             // duty latched at the start of the period
+  dInt: P.duty,           // regulator's integrator state
+  dReg: P.duty,           // regulator's output duty
+  total: 0,               // total steps simulated since reset
+  on: true, cond: true,   // switch closed?  is the inductor conducting?
+};
+const buf = {
+  gate: new Float32Array(CAP), vsw: new Float32Array(CAP), vl: new Float32Array(CAP),
+  il: new Float32Array(CAP), vo: new Float32Array(CAP),
+};
+// per-period accumulators and the latest completed-period statistics
+const acc = { icSum: 0, vSum: 0, vMin: Infinity, vMax: -Infinity, iSum: 0, iMin: Infinity, iMax: -Infinity, pin: 0, pout: 0, dcm: false };
+const stats = { icAvg: 0, vAvg: 0, vPP: 0, iAvg: 0, iPP: 0, dcm: false, eff: 1 };
+// per-frame accumulators for the schematic animation
+const fr = { n: 0, tOn: 0, qOn: 0, tOff: 0, qOff: 0, qLoad: 0 };
+
+const sign = () => (P.topo === 'buckboost' ? -1 : 1);
+
+function idealVout(d) {
+  if (P.topo === 'buck') return P.vin * d;
+  if (P.topo === 'boost') return P.vin / (1 - d);
+  return -P.vin * d / (1 - d);
+}
+
+// small-signal gain dVout/dD, used to scale the regulator
+function plantGain(d) {
+  if (P.topo === 'buck') return P.vin;
+  return P.vin / ((1 - d) * (1 - d));
+}
+
+function regulate() {
+  // Voltage-mode PI-style control with capacitor-current feedback. Feeding back
+  // the capacitor current damps the (often very high-Q) LC resonance, so the
+  // slower integral term can then trim the output to the target.
+  const d = S.dInt;
+  const Leff = P.topo === 'buck' ? P.L : P.L / ((1 - d) * (1 - d));
+  const G = plantGain(d);
+  const w0p = Math.min(0.3, 1 / Math.sqrt(Leff * P.C) / P.fsw);   // resonance, rad per period
+  const kc = 1.4 * Math.sqrt(Leff / P.C) / G;
+  const ki = 0.2 * w0p / G;
+  const err = P.vref - stats.vAvg;
+  const dmax = P.topo === 'buck' ? 0.95 : 0.85;
+  S.dInt = Math.min(dmax, Math.max(0.02, d + Math.max(-0.01, Math.min(0.01, ki * err))));
+  S.dReg = Math.min(dmax, Math.max(0.02, S.dInt - Math.max(-0.2, Math.min(0.2, kc * stats.icAvg))));
+}
+
+function step() {
+  if (S.k === 0) {
+    if (P.regulate) regulate();
+    S.dL = P.regulate ? S.dReg : P.duty;
+  }
+  const dt = 1 / (P.fsw * SPP);
+  const on = S.k < Math.round(S.dL * SPP);
+  const ron = P.losses ? LOSS.ron : 0, dcr = P.losses ? LOSS.dcr : 0, vd = P.losses ? LOSS.vd : 0;
+  const vin = P.vin, R = P.R;
+  let v = S.v, iL = S.iL;
+
+  // Inductor voltage for the current switch state (assuming it conducts).
+  let vL;
+  if (P.topo === 'buck') vL = on ? vin - iL * (ron + dcr) - v : -v - vd - iL * dcr;
+  else if (P.topo === 'boost') vL = on ? vin - iL * (ron + dcr) : vin - v - vd - iL * dcr;
+  else vL = on ? vin - iL * (ron + dcr) : -v - vd - iL * dcr;
+
+  iL += vL / P.L * dt;
+  let cond = true;
+  if (iL <= 0) { iL = 0; cond = false; vL = 0; }   // non-synchronous: current can't reverse
+
+  // Capacitor current: does the inductor feed the output right now?
+  const feeds = P.topo === 'buck' ? cond : (!on && cond);
+  const ic = (feeds ? iL : 0) - v / R;
+  acc.icSum += ic;
+  v += ic / P.C * dt;
+  if (v < 0) v = 0;
+
+  // Switch-node voltage (for the scope)
+  let vsw;
+  if (P.topo === 'buck') vsw = on ? vin - iL * ron : (cond ? -vd : v);
+  else if (P.topo === 'boost') vsw = on ? iL * ron : (cond ? v + vd : vin);
+  else vsw = on ? vin - iL * ron : (cond ? -(v + vd) : 0);
+
+  const iin = P.topo === 'boost' ? iL : (on ? iL : 0);
+
+  S.v = v; S.iL = iL; S.on = on; S.cond = cond;
+  const j = S.total % CAP;
+  buf.gate[j] = on ? 1 : 0; buf.vsw[j] = vsw; buf.vl[j] = vL; buf.il[j] = iL; buf.vo[j] = sign() * v;
+  S.total++;
+
+  acc.vSum += v; if (v < acc.vMin) acc.vMin = v; if (v > acc.vMax) acc.vMax = v;
+  acc.iSum += iL; if (iL < acc.iMin) acc.iMin = iL; if (iL > acc.iMax) acc.iMax = iL;
+  acc.pin += vin * iin; acc.pout += v * v / R;
+  if (!on && !cond) acc.dcm = true;
+
+  fr.n++;
+  if (on) { fr.tOn++; fr.qOn += iL; }
+  else if (cond) { fr.tOff++; fr.qOff += iL; }
+  fr.qLoad += v / R;
+
+  S.k++;
+  if (S.k >= SPP) {
+    S.k = 0;
+    stats.icAvg = acc.icSum / SPP; acc.icSum = 0;
+    stats.vAvg = acc.vSum / SPP; stats.vPP = acc.vMax - acc.vMin;
+    stats.iAvg = acc.iSum / SPP; stats.iPP = acc.iMax - acc.iMin;
+    stats.dcm = acc.dcm;
+    const eff = acc.pin > 1e-9 ? Math.min(1, acc.pout / acc.pin) : 1;
+    stats.eff += (eff - stats.eff) * 0.05;
+    acc.vSum = 0; acc.vMin = Infinity; acc.vMax = -Infinity;
+    acc.iSum = 0; acc.iMin = Infinity; acc.iMax = -Infinity;
+    acc.pin = 0; acc.pout = 0; acc.dcm = false;
+  }
+}
+
+function coldStart() {
+  S.iL = 0; S.v = 0; S.k = 0; S.total = 0;
+  S.dInt = P.regulate ? 0.05 : P.duty;
+  Object.assign(stats, { icAvg: 0, vAvg: 0, vPP: 0, iAvg: 0, iPP: 0, dcm: false, eff: 1 });
+  Object.assign(acc, { icSum: 0, vSum: 0, vMin: Infinity, vMax: -Infinity, iSum: 0, iMin: Infinity, iMax: -Infinity, pin: 0, pout: 0, dcm: false });
+}
+
+function settle() {
+  // Start from the ideal operating point, then run long enough for the LC
+  // transient (and the regulator) to die out.
+  const d = P.regulate ? S.dInt : P.duty;
+  const vo = Math.abs(idealVout(d));
+  S.v = Math.min(vo, 200);
+  S.iL = P.topo === 'buck' ? S.v / P.R : S.v / P.R / Math.max(0.05, 1 - d);
+  S.k = 0;
+  const tau = 2 * P.R * P.C;                           // LC damping time constant
+  const periods = Math.min(12000, Math.max(1500, Math.ceil(8 * tau * P.fsw)));
+  const n = periods * SPP;
+  for (let i = 0; i < n; i++) step();
+  if (P.regulate) for (let i = 0; i < 8000 * SPP && Math.abs(stats.vAvg - P.vref) > 0.002 * P.vref + 0.001; i++) step();
+  stats.eff = 1; for (let i = 0; i < 100 * SPP; i++) step();
+  resetFrame();
+}
+
+function resetFrame() { fr.n = 0; fr.tOn = 0; fr.qOn = 0; fr.tOff = 0; fr.qOff = 0; fr.qLoad = 0; }
+
+// ---------------------------------------------------------------- schematic
+const svg = document.getElementById('schem');
+const Y0 = 70, Y1 = 250;   // top rail, ground rail
+
+const sw = {
+  h(x1, x2, y) {
+    return `<circle class="comp body" cx="${x1}" cy="${y}" r="3.5"/><circle class="comp body" cx="${x2}" cy="${y}" r="3.5"/>
+      <line id="sw-closed" class="comp" x1="${x1}" y1="${y}" x2="${x2}" y2="${y}"/>
+      <line id="sw-open" class="comp" x1="${x1}" y1="${y}" x2="${x2 - 4}" y2="${y - 26}"/>`;
+  },
+  v(x, y1, y2) {
+    return `<circle class="comp body" cx="${x}" cy="${y1}" r="3.5"/><circle class="comp body" cx="${x}" cy="${y2}" r="3.5"/>
+      <line id="sw-closed" class="comp" x1="${x}" y1="${y2}" x2="${x}" y2="${y1}"/>
+      <line id="sw-open" class="comp" x1="${x}" y1="${y2}" x2="${x + 26}" y2="${y1 + 4}"/>`;
+  },
+};
+const diode = {
+  // pointing right (dir = 1) or left (dir = -1), from x1 to x2
+  h(x1, x2, y, dir) {
+    const a = dir > 0 ? x1 + 14 : x2 - 14, b = dir > 0 ? x2 - 14 : x1 + 14;
+    return `<path class="comp" d="M${x1},${y} H${x2}"/>
+      <path id="d-body" class="comp body" d="M${a},${y - 13} L${a},${y + 13} L${b},${y} Z"/>
+      <path id="d-fill" d="M${a},${y - 13} L${a},${y + 13} L${b},${y} Z" style="fill: var(--off-color); opacity: 0"/>
+      <path class="comp" d="M${b},${y - 13} V${y + 13}"/>`;
+  },
+  // pointing up (cathode at top)
+  up(x, y1, y2) {
+    const a = y2 - 14, b = y1 + 14;
+    return `<path class="comp" d="M${x},${y1} V${y2}"/>
+      <path id="d-body" class="comp body" d="M${x - 13},${a} L${x + 13},${a} L${x},${b} Z"/>
+      <path id="d-fill" d="M${x - 13},${a} L${x + 13},${a} L${x},${b} Z" style="fill: var(--off-color); opacity: 0"/>
+      <path class="comp" d="M${x - 13},${b} H${x + 13}"/>`;
+  },
+};
+const inductor = {
+  h(x1, y) { return `<path class="comp" d="M${x1},${y} ${'a12.5,12.5 0 0 1 25,0 '.repeat(4)}"/>`; },
+  v(x, y1) { return `<path class="comp" d="M${x},${y1} ${'a12.5,12.5 0 0 1 0,25 '.repeat(4)}"/>`; },
+};
+const capacitor = (x, yc) =>
+  `<path class="comp" d="M${x - 18},${yc - 6} H${x + 18} M${x - 18},${yc + 6} H${x + 18}"/>`;
+const resistor = (x, y1) =>
+  `<path class="comp" d="M${x},${y1} v8 l10,5 l-20,10 l20,10 l-20,10 l20,10 l-20,10 l20,10 l-10,5 v2"/>`;
+const source = (x, yc) =>
+  `<circle class="comp body" cx="${x}" cy="${yc}" r="24"/>
+   <path class="comp" d="M${x - 5},${yc - 10} h10 M${x},${yc - 15} v10 M${x - 5},${yc + 11} h10" style="stroke-width:2"/>`;
+const ground = (x, y) =>
+  `<path class="comp" d="M${x},${y} v12 M${x - 16},${y + 12} h32 M${x - 10},${y + 18} h20 M${x - 4},${y + 24} h8"/>`;
+const junctions = (pts) => pts.map(([x, y]) => `<circle class="junction" cx="${x}" cy="${y}" r="4"/>`).join('');
+
+// Output stage (C and R) and the input source are common to every topology.
+const common = () => `
+  <path class="wire" d="M480,${Y0} V154 M480,166 V${Y1}"/>
+  ${capacitor(480, 160)}
+  <path class="wire" d="M480,${Y0} H580 V120 M580,200 V${Y1} H60 V184 M60,136 V${Y0}"/>
+  ${resistor(580, 120)}
+  ${source(60, 160)}
+  ${ground(60, Y1)}
+  <text class="name" x="92" y="150">V<tspan dy="4" font-size="10">in</tspan></text>
+  <text class="sub" id="lbl-vin" x="92" y="170"></text>
+  <text class="name" x="455" y="150" text-anchor="end">C</text>
+  <text class="name" x="600" y="152">R</text>
+  <text class="sub" id="lbl-iload" x="600" y="172"></text>
+  <text class="name" x="530" y="42" text-anchor="middle">V<tspan dy="4" font-size="10">out</tspan></text>
+  <text class="sub" id="lbl-vout" x="530" y="60" text-anchor="middle"></text>`;
+
+const TOPO = {
+  buck: {
+    title: 'Buck converter (step-down)',
+    draw: () => `
+      <path class="wire" d="M60,${Y0} H120 M180,${Y0} H280 M380,${Y0} H480 M230,${Y0} V130 M230,190 V${Y1}"/>
+      ${sw.h(120, 180, Y0)} ${diode.up(230, 130, 190)} ${inductor.h(280, Y0)}
+      <text class="name" x="150" y="30" text-anchor="middle">S</text>
+      <text class="name" x="252" y="166">D</text>
+      <text class="name" x="330" y="42" text-anchor="middle">L</text>
+      <text class="sub" id="lbl-il" x="330" y="102" text-anchor="middle"></text>
+      ${junctions([[230, Y0], [480, Y0], [230, Y1], [480, Y1]])}`,
+    loops: {
+      on: `M60,${Y1} V${Y0} H480 V${Y1} Z`,
+      off: `M230,${Y1} V${Y0} H480 V${Y1} Z`,
+      load: `M480,${Y0} H580 V${Y1} H480`,
+    },
+  },
+  boost: {
+    title: 'Boost converter (step-up)',
+    draw: () => `
+      <path class="wire" d="M60,${Y0} H110 M210,${Y0} H300 M360,${Y0} H480 M250,${Y0} V130 M250,190 V${Y1}"/>
+      ${inductor.h(110, Y0)} ${sw.v(250, 130, 190)} ${diode.h(300, 360, Y0, 1)}
+      <text class="name" x="160" y="42" text-anchor="middle">L</text>
+      <text class="sub" id="lbl-il" x="160" y="102" text-anchor="middle"></text>
+      <text class="name" x="232" y="166" text-anchor="end">S</text>
+      <text class="name" x="330" y="42" text-anchor="middle">D</text>
+      ${junctions([[250, Y0], [480, Y0], [250, Y1], [480, Y1]])}`,
+    loops: {
+      on: `M60,${Y1} V${Y0} H250 V${Y1} Z`,
+      off: `M60,${Y1} V${Y0} H480 V${Y1} Z`,
+      load: `M480,${Y0} H580 V${Y1} H480`,
+    },
+  },
+  buckboost: {
+    title: 'Inverting buck-boost converter',
+    draw: () => `
+      <path class="wire" d="M60,${Y0} H120 M180,${Y0} H300 M360,${Y0} H480 M250,${Y0} V110 M250,210 V${Y1}"/>
+      ${sw.h(120, 180, Y0)} ${inductor.v(250, 110)} ${diode.h(300, 360, Y0, -1)}
+      <text class="name" x="150" y="30" text-anchor="middle">S</text>
+      <text class="name" x="330" y="42" text-anchor="middle">D</text>
+      <text class="name" x="280" y="152">L</text>
+      <text class="sub" id="lbl-il" x="280" y="172"></text>
+      ${junctions([[250, Y0], [480, Y0], [250, Y1], [480, Y1]])}`,
+    loops: {
+      on: `M60,${Y1} V${Y0} H250 V${Y1} Z`,
+      off: `M480,${Y0} H250 V${Y1} H480 Z`,
+      load: `M480,${Y1} H580 V${Y0} H480`,
+    },
+  },
+};
+
+let el = {};
+function drawSchematic() {
+  const t = TOPO[P.topo];
+  svg.innerHTML = `
+    <g>
+      <path id="glow-on" class="glow" d="${t.loops.on}" style="stroke: var(--on-color); opacity: 0"/>
+      <path id="glow-off" class="glow" d="${t.loops.off}" style="stroke: var(--off-color); opacity: 0"/>
+    </g>
+    ${common()}
+    ${t.draw()}
+    <path id="dots-load" class="dots" d="${t.loops.load}" style="stroke: var(--load-color)"/>
+    <path id="dots-on" class="dots" d="${t.loops.on}" style="stroke: var(--on-color)"/>
+    <path id="dots-off" class="dots" d="${t.loops.off}" style="stroke: var(--off-color)"/>`;
+  document.getElementById('schem-title').textContent = t.title;
+  el = {};
+  for (const id of ['glow-on', 'glow-off', 'dots-on', 'dots-off', 'dots-load', 'sw-open', 'sw-closed', 'd-fill',
+    'lbl-vin', 'lbl-vout', 'lbl-il', 'lbl-iload']) el[id] = document.getElementById(id);
+}
+
+// ---------------------------------------------------------------- phase text
+const PHASE = {
+  buck: {
+    on: ['Switch closed — inductor charging', 'V<sub>in</sub> drives current through L into the output. The inductor sees V<sub>in</sub> − V<sub>out</sub> (positive), so its current ramps <em>up</em> and it stores energy in its magnetic field.'],
+    off: ['Switch open — inductor freewheeling', 'The inductor won\'t let its current stop, so its voltage flips and it pulls current up through the diode. It sees −V<sub>out</sub>, so the current ramps <em>down</em> as it hands its stored energy to the output.'],
+    dcm: ['Inductor empty — capacitor holds the output', 'The inductor current has fallen all the way to zero and the diode has switched off. Until the next cycle only the capacitor feeds the load (discontinuous conduction mode).'],
+  },
+  boost: {
+    on: ['Switch closed — inductor charging from V<sub>in</sub>', 'The switch shorts the inductor across the input. It sees the full V<sub>in</sub>, so its current ramps <em>up</em>. Meanwhile the diode blocks, and the capacitor alone feeds the load.'],
+    off: ['Switch open — inductor adds to V<sub>in</sub>', 'The inductor keeps its current flowing by raising its voltage, which stacks <em>on top of</em> V<sub>in</sub> and pushes current through the diode into the higher-voltage output. It sees V<sub>in</sub> − V<sub>out</sub> (negative), so its current ramps down.'],
+    dcm: ['Inductor empty — capacitor holds the output', 'The inductor has delivered all its energy and its current is zero; the diode stops conducting. The capacitor feeds the load until the switch closes again (discontinuous mode).'],
+  },
+  buckboost: {
+    on: ['Switch closed — inductor charging from V<sub>in</sub>', 'The inductor is connected straight across the input and its current ramps <em>up</em>. The output is cut off from it, so the capacitor alone feeds the load.'],
+    off: ['Switch open — inductor dumps energy (inverted)', 'The inductor keeps its current flowing downward, so it must pull it <em>up</em> out of the output through the diode — charging the capacitor negative. That is why this converter\'s output is below ground.'],
+    dcm: ['Inductor empty — capacitor holds the output', 'All the stored energy has been delivered and the inductor current is zero. The capacitor holds up the (negative) output until the next cycle (discontinuous mode).'],
+  },
+};
+const EXPLAIN = {
+  buck: `<p>A buck converter <strong>steps voltage down</strong> efficiently. Rather than burning off the excess as heat like a linear regulator, it chops V<sub>in</sub> into pulses with a fast switch and lets the inductor and capacitor average them out.</p>
+    <p>In continuous mode the output is just the average of the switch-node pulses: <span class="formula">V<sub>out</sub> = D · V<sub>in</sub></span></p>
+    <p>Power in ≈ power out, so stepping voltage down steps current <em>up</em>: the load can draw more current than the input supplies.</p>`,
+  boost: `<p>A boost converter <strong>steps voltage up</strong>. With the switch closed the inductor charges straight from the input; when it opens, the inductor's voltage stacks on top of V<sub>in</sub> to push current into the output.</p>
+    <p>In continuous mode: <span class="formula">V<sub>out</sub> = V<sub>in</sub> / (1 − D)</span></p>
+    <p>As D → 1 the ideal gain shoots toward infinity, but real losses cap it — turn on losses and push D high to see the output collapse instead.</p>`,
+  buckboost: `<p>The inverting buck-boost can go <strong>above or below</strong> V<sub>in</sub> — at the cost of a <strong>negative</strong> output. The inductor charges from the input, then is disconnected and dumps its energy into the output with reversed polarity.</p>
+    <p>In continuous mode: <span class="formula">V<sub>out</sub> = −V<sub>in</sub> · D / (1 − D)</span></p>
+    <p>D &lt; 0.5 gives |V<sub>out</sub>| &lt; V<sub>in</sub>; D &gt; 0.5 gives more.</p>`,
+};
+
+let lastPhase = '';
+function setPhase(key) {
+  if (key === lastPhase) return;
+  lastPhase = key;
+  const box = document.getElementById('phase');
+  if (key === 'fast') {
+    box.style.setProperty('--phase-c', 'var(--primary)');
+    document.getElementById('phase-title').innerHTML = 'Switching too fast to follow';
+    document.getElementById('phase-text').innerHTML = 'Both current loops are shown blended by how long each is active. Slow the playback below a few cycles per second (or pause and step) to watch each phase individually.';
+    return;
+  }
+  const [t, d] = PHASE[P.topo][key];
+  box.style.setProperty('--phase-c', key === 'on' ? 'var(--on-color)' : key === 'off' ? 'var(--off-color)' : 'var(--outline)');
+  document.getElementById('phase-title').innerHTML = t;
+  document.getElementById('phase-text').innerHTML = d;
+}
+
+// ---------------------------------------------------------------- formatting
+function fmt(v, unit, digits = 3) {
+  const a = Math.abs(v);
+  if (a !== 0 && a < 1e-3) return (v * 1e6).toPrecision(digits) + ' µ' + unit;
+  if (a !== 0 && a < 1) return (v * 1e3).toPrecision(digits) + ' m' + unit;
+  if (a >= 1e3) return (v / 1e3).toPrecision(digits) + ' k' + unit;
+  return v.toPrecision(digits) + ' ' + unit;
+}
+const fmtV = (v) => (Math.abs(v) >= 100 ? v.toFixed(1) : v.toFixed(2)) + ' V';
+const fmtA = (v) => (Math.abs(v) >= 100 ? v.toFixed(1) : v.toFixed(2)) + ' A';
+
+// ---------------------------------------------------------------- controls
+const $ = (id) => document.getElementById(id);
+const ctl = {
+  speed: $('s-speed'), duty: $('s-duty'), vin: $('s-vin'), r: $('s-r'), f: $('s-f'), l: $('s-l'), c: $('s-c'),
+  vref: $('s-vref'), win: $('s-win'), reg: $('c-reg'), loss: $('c-loss'),
+};
+
+function vrefRange() {
+  if (P.topo === 'buck') return [0.5, Math.max(0.6, P.vin * 0.9)];
+  if (P.topo === 'boost') return [P.vin * 1.1, P.vin * 5];
+  return [0.5, P.vin * 5];
+}
+function vrefToSlider() {
+  const [lo, hi] = vrefRange();
+  P.vref = Math.min(hi, Math.max(lo, P.vref));
+  ctl.vref.value = Math.round(1000 * (P.vref - lo) / (hi - lo));
+}
+
+function syncUI() {
+  ctl.speed.value = M.speed.from(P.pps);
+  ctl.duty.value = Math.round(P.duty * 100);
+  ctl.vin.value = P.vin;
+  ctl.r.value = M.r.from(P.R);
+  ctl.f.value = M.f.from(P.fsw);
+  ctl.l.value = M.l.from(P.L);
+  ctl.c.value = M.c.from(P.C);
+  ctl.win.value = M.win.from(P.periods);
+  ctl.reg.checked = P.regulate;
+  ctl.loss.checked = P.losses;
+  vrefToSlider();
+  updateLabels();
+}
+
+function updateLabels() {
+  const pps = P.pps;
+  $('o-speed').textContent = (pps < 10 ? pps.toFixed(2) : Math.round(pps)) + ' cycles/s';
+  const slow = P.fsw / pps;
+  $('speed-note').textContent = `A real ${fmt(P.fsw, 'Hz', 3)} converter runs ${slow >= 1e6 ? (slow / 1e6).toPrecision(3) + ' million' : Math.round(slow).toLocaleString()}× faster than this.`;
+  $('o-duty').textContent = (P.regulate ? S.dL : P.duty).toFixed(2);
+  $('o-vin').textContent = P.vin.toFixed(1) + ' V';
+  $('o-r').textContent = fmt(P.R, 'Ω', 3);
+  $('o-f').textContent = fmt(P.fsw, 'Hz', 3);
+  $('o-l').textContent = fmt(P.L, 'H', 3);
+  $('o-c').textContent = fmt(P.C, 'F', 3);
+  $('o-win').textContent = (P.periods < 10 ? P.periods.toFixed(1) : Math.round(P.periods)) + ' cycles · ' + fmt(P.periods / P.fsw, 's', 3);
+  $('o-vref').textContent = (sign() < 0 ? '−' : '') + P.vref.toFixed(2) + ' V';
+  $('reg-ctl').hidden = !P.regulate;
+  ctl.duty.disabled = P.regulate;
+}
+
+ctl.speed.addEventListener('input', () => { P.pps = M.speed.to(+ctl.speed.value); updateLabels(); });
+ctl.duty.addEventListener('input', () => { P.duty = +ctl.duty.value / 100; updateLabels(); });
+ctl.vin.addEventListener('input', () => { P.vin = +ctl.vin.value; vrefToSlider(); updateLabels(); });
+ctl.r.addEventListener('input', () => { P.R = M.r.to(+ctl.r.value); updateLabels(); });
+ctl.f.addEventListener('input', () => { P.fsw = M.f.to(+ctl.f.value); updateLabels(); });
+ctl.l.addEventListener('input', () => { P.L = M.l.to(+ctl.l.value); updateLabels(); });
+ctl.c.addEventListener('input', () => { P.C = M.c.to(+ctl.c.value); updateLabels(); });
+ctl.win.addEventListener('input', () => { P.periods = M.win.to(+ctl.win.value); updateLabels(); });
+ctl.vref.addEventListener('input', () => {
+  const [lo, hi] = vrefRange();
+  P.vref = lo + (hi - lo) * (+ctl.vref.value) / 1000; updateLabels();
+});
+ctl.reg.addEventListener('change', () => {
+  P.regulate = ctl.reg.checked;
+  if (P.regulate) { S.dInt = S.dL; P.vref = Math.abs(stats.vAvg) || P.vref; vrefToSlider(); }
+  else { P.duty = Math.round(S.dL * 100) / 100; ctl.duty.value = Math.round(P.duty * 100); }
+  updateLabels();
+});
+ctl.loss.addEventListener('change', () => { P.losses = ctl.loss.checked; });
+
+document.querySelectorAll('.seg button').forEach((b) => b.addEventListener('click', () => {
+  if (P.topo === b.dataset.topo) return;
+  P.topo = b.dataset.topo;
+  document.querySelectorAll('.seg button').forEach((o) => o.setAttribute('aria-pressed', String(o === b)));
+  P.duty = DEFAULT_DUTY[P.topo];
+  S.dInt = P.duty;
+  P.vref = Math.abs(idealVout(P.duty));
+  syncUI();
+  drawSchematic();
+  $('ex-title').textContent = TOPO[P.topo].title;
+  $('ex-body').innerHTML = EXPLAIN[P.topo];
+  lastPhase = '';
+  coldStart(); settle();
+}));
+
+$('btn-pause').addEventListener('click', () => {
+  P.paused = !P.paused;
+  $('btn-pause').textContent = P.paused ? 'Play' : 'Pause';
+});
+$('btn-step').addEventListener('click', () => {
+  P.paused = true; $('btn-pause').textContent = 'Play';
+  resetFrame();
+  do step(); while (S.k !== 0);
+  stepNudge = true;
+});
+$('btn-reset').addEventListener('click', () => { coldStart(); resetFrame(); });
+$('btn-settle').addEventListener('click', () => { settle(); });
+
+// ---------------------------------------------------------------- scope
+const cv = $('scope');
+const ctx = cv.getContext('2d');
+let W = 0, H = 0, dpr = 1, colors = {};
+const LANES = [
+  { key: 'gate', name: 'Gate drive (S on/off)', unit: '', color: 'gate-color', fixed: [-0.15, 1.15] },
+  { key: 'vsw', name: 'Switch-node voltage', unit: 'V', color: 'on-color', zero: true },
+  { key: 'vl', name: 'Inductor voltage', unit: 'V', color: 'vl-color', zero: true },
+  { key: 'il', name: 'Inductor current', unit: 'A', color: 'off-color', zero: true },
+  { key: 'vo', name: 'Output voltage', unit: 'V', color: 'load-color', zoom: true },
+];
+const ranges = LANES.map(() => [0, 1]);
+
+function readColors() {
+  const cs = getComputedStyle(document.documentElement);
+  for (const k of ['gate-color', 'on-color', 'vl-color', 'off-color', 'load-color', 'text', 'text-variant', 'scope-grid', 'outline'])
+    colors[k] = cs.getPropertyValue('--' + k).trim();
+}
+function resize() {
+  dpr = window.devicePixelRatio || 1;
+  const r = cv.getBoundingClientRect();
+  W = r.width; H = r.height;
+  cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+  readColors();
+}
+new ResizeObserver(resize).observe(cv);
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { readColors(); drawSchematic(); });
+
+function drawScope() {
+  if (!W) return;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+  const N = Math.max(2, Math.round(P.periods * SPP));
+  const s0 = Math.floor(S.total / N) * N;      // start of the current sweep
+  const sweepSeconds = P.periods / P.pps;
+  // Segments to draw: [first sample, last sample (excl), x offset in samples, alpha]
+  const segs = [];
+  const oldest = Math.max(0, S.total - CAP);
+  if (sweepSeconds < 0.5 || P.paused && S.total - s0 < 2) {
+    // fast: show the last complete sweep, like a triggered scope
+    if (s0 - N >= oldest) segs.push([s0 - N, s0, 0, 1]);
+    else if (s0 > oldest) segs.push([oldest, s0, oldest - (s0 - N), 1]);
+    else segs.push([oldest, S.total, oldest - s0, 1]);
+  } else {
+    // slow: sweep left→right over the previous trace
+    const gap = Math.round(N * 0.02);
+    const prevStart = s0 - N + (S.total - s0) + gap;
+    if (prevStart < s0 && prevStart >= oldest) segs.push([prevStart, s0, prevStart - (s0 - N), 0.35]);
+    segs.push([s0, S.total, 0, 1]);
+  }
+
+  const padL = 8, padR = 8, laneGap = 6;
+  const lh = (H - laneGap * (LANES.length - 1)) / LANES.length;
+  const pw = W - padL - padR;
+  const xOf = (i) => padL + (i / N) * pw;
+
+  // grid: one vertical line per switching period when it's readable
+  ctx.lineWidth = 1;
+  if (P.periods <= 30) {
+    ctx.strokeStyle = colors['scope-grid'];
+    ctx.beginPath();
+    for (let p = 0; p <= Math.ceil(P.periods); p++) { const x = xOf(p * SPP) + 0.5; ctx.moveTo(x, 0); ctx.lineTo(x, H); }
+    ctx.stroke();
+  }
+
+  LANES.forEach((lane, li) => {
+    const top = li * (lh + laneGap), a = buf[lane.key];
+    // range
+    let lo = Infinity, hi = -Infinity;
+    for (const [from, to] of segs) for (let s = from; s < to; s++) { const v = a[s % CAP]; if (v < lo) lo = v; if (v > hi) hi = v; }
+    let target;
+    if (lane.fixed) target = lane.fixed;
+    else if (!isFinite(lo)) target = ranges[li];
+    else {
+      if (lane.zero) { lo = Math.min(lo, 0); hi = Math.max(hi, 0); }
+      let span = hi - lo;
+      const minSpan = lane.zoom ? Math.max(0.01, Math.abs(hi) * 0.002) : 0.5;
+      if (span < minSpan) { const c = (hi + lo) / 2; lo = c - minSpan / 2; hi = c + minSpan / 2; span = minSpan; }
+      target = [lo - span * 0.1, hi + span * 0.1];
+    }
+    const r = ranges[li];
+    const k = sweepSeconds < 0.5 ? 0.25 : 0.12;
+    // expand immediately, shrink smoothly
+    r[0] = target[0] < r[0] ? target[0] : r[0] + (target[0] - r[0]) * k;
+    r[1] = target[1] > r[1] ? target[1] : r[1] + (target[1] - r[1]) * k;
+    const tTop = top + 18, th = lh - 20;   // leave room for the lane label
+    const yOf = (v) => tTop + th - ((v - r[0]) / (r[1] - r[0])) * th;
+
+    // lane divider + zero line
+    ctx.strokeStyle = colors['scope-grid'];
+    ctx.beginPath(); ctx.moveTo(0, top + lh + laneGap / 2); ctx.lineTo(W, top + lh + laneGap / 2); ctx.stroke();
+    if (r[0] < 0 && r[1] > 0) {
+      ctx.setLineDash([4, 4]); ctx.strokeStyle = colors.outline;
+      ctx.beginPath(); ctx.moveTo(padL, yOf(0)); ctx.lineTo(W - padR, yOf(0)); ctx.stroke(); ctx.setLineDash([]);
+    }
+
+    // trace, min/max-decimated per pixel column
+    ctx.strokeStyle = colors[lane.color]; ctx.lineWidth = 1.8; ctx.lineJoin = 'round';
+    for (const [from, to, xoff, alpha] of segs) {
+      if (to - from < 1) continue;
+      ctx.globalAlpha = alpha;
+      ctx.beginPath();
+      const perPx = (N / pw);
+      if (perPx <= 2) {
+        for (let s = from; s < to; s++) {
+          const x = xOf(s - from + xoff), y = yOf(a[s % CAP]);
+          s === from ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        }
+      } else {
+        let s = from, first = true;
+        while (s < to) {
+          const x = Math.floor(xOf(s - from + xoff));
+          let mn = Infinity, mx = -Infinity, e = s;
+          while (e < to && Math.floor(xOf(e - from + xoff)) === x) { const v = a[e % CAP]; if (v < mn) mn = v; if (v > mx) mx = v; e++; }
+          if (first) { ctx.moveTo(x, yOf(mn)); first = false; } else ctx.lineTo(x, yOf(mn));
+          ctx.lineTo(x + 0.5, yOf(mx));
+          s = e;
+        }
+      }
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+
+    // labels
+    ctx.font = '600 12px system-ui, sans-serif';
+    ctx.textBaseline = 'top';
+    ctx.fillStyle = colors[lane.color];
+    ctx.textAlign = 'left';
+    const label = lane.name + (lane.zoom && (r[0] > 0 || r[1] < 0) ? '  (zoomed in on the ripple)' : '');
+    ctx.fillText(label, padL + 4, top + 3);
+    if (!lane.fixed) {
+      ctx.font = '11px system-ui, sans-serif';
+      ctx.fillStyle = colors['text-variant'];
+      ctx.textAlign = 'right';
+      const dig = lane.zoom ? 3 : 2;
+      ctx.fillText(r[1].toFixed(dig) + ' ' + lane.unit, W - padR - 2, top + 3);
+      ctx.textBaseline = 'bottom';
+      ctx.fillText(r[0].toFixed(dig) + ' ' + lane.unit, W - padR - 2, top + lh - 1);
+    }
+  });
+
+  // sweep cursor
+  if (segs.length === 2 || (sweepSeconds >= 0.5 && !P.paused)) {
+    const x = xOf(S.total - s0);
+    ctx.strokeStyle = colors.outline; ctx.globalAlpha = 0.6;
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); ctx.globalAlpha = 1;
+  }
+}
+
+// ---------------------------------------------------------------- animation loop
+const vis = { on: 0, off: 0, load: 1, iOn: 0, iOff: 0, iLoad: 0, offs: { on: 0, off: 0, load: 0 } };
+let stepAcc = 0, lastT = performance.now(), labelT = 0, stepNudge = false;
+
+function dotSpeed(i) { return Math.min(260, 70 * Math.sqrt(Math.max(0, i))); }
+
+function updateSchematic(realDt) {
+  const fast = P.pps > 4;
+  if (fr.n > 0) {
+    const fOn = fr.tOn / fr.n, fOff = fr.tOff / fr.n;
+    const a = fast ? 0.12 : 1;
+    vis.on += (fOn - vis.on) * a;
+    vis.off += (fOff - vis.off) * a;
+    if (fr.tOn) vis.iOn = fr.qOn / fr.tOn;
+    if (fr.tOff) vis.iOff = fr.qOff / fr.tOff;
+    vis.iLoad = fr.qLoad / fr.n;
+  }
+  const moving = !P.paused || stepNudge;
+  if (moving && !P.paused) {
+    vis.offs.on -= dotSpeed(vis.iOn) * realDt * (vis.on > 0.02 ? 1 : 0);
+    vis.offs.off -= dotSpeed(vis.iOff) * realDt * (vis.off > 0.02 ? 1 : 0);
+    vis.offs.load -= dotSpeed(vis.iLoad) * realDt;
+  }
+  el['glow-on'].style.opacity = (0.35 * vis.on).toFixed(3);
+  el['glow-off'].style.opacity = (0.35 * vis.off).toFixed(3);
+  el['dots-on'].style.opacity = Math.min(1, vis.on * 1.5).toFixed(3);
+  el['dots-off'].style.opacity = Math.min(1, vis.off * 1.5).toFixed(3);
+  el['dots-load'].style.opacity = vis.iLoad > 1e-4 ? '1' : '0';
+  el['dots-on'].style.strokeDashoffset = vis.offs.on.toFixed(1);
+  el['dots-off'].style.strokeDashoffset = vis.offs.off.toFixed(1);
+  el['dots-load'].style.strokeDashoffset = vis.offs.load.toFixed(1);
+  // switch blade: show fraction of time closed; when slow this snaps open/closed
+  const swOn = fast ? vis.on : (S.on ? 1 : 0);
+  el['sw-closed'].style.opacity = swOn.toFixed(3);
+  el['sw-open'].style.opacity = (1 - swOn).toFixed(3);
+  el['d-fill'].style.opacity = (0.85 * vis.off).toFixed(3);
+
+  if (fast) setPhase('fast');
+  else setPhase(S.on ? 'on' : S.cond ? 'off' : 'dcm');
+}
+
+function updateReadouts() {
+  const sg = sign();
+  const vo = sg * stats.vAvg;
+  el['lbl-vin'].textContent = fmtV(P.vin);
+  el['lbl-vout'].textContent = fmtV(sg * S.v);
+  el['lbl-il'].textContent = fmtA(S.iL);
+  el['lbl-iload'].textContent = fmtA(S.v / P.R);
+  $('st-vout').textContent = fmtV(vo);
+  $('st-ideal').textContent = fmtV(idealVout(S.dL));
+  $('st-vrip').textContent = fmt(stats.vPP, 'V', 3);
+  $('st-il').textContent = fmtA(stats.iAvg);
+  $('st-irip').textContent = fmtA(stats.iPP);
+  $('st-iload').textContent = fmtA(stats.vAvg / P.R);
+  $('st-mode').textContent = stats.dcm ? 'Discontinuous' : 'Continuous';
+  $('st-eff').textContent = (P.losses ? (stats.eff * 100).toFixed(1) : '100') + ' %';
+  if (P.regulate) $('o-duty').textContent = S.dL.toFixed(2), ctl.duty.value = Math.round(S.dL * 100);
+}
+
+function frame(t) {
+  const realDt = Math.min(0.05, (t - lastT) / 1000);
+  lastT = t;
+  if (!P.paused) {
+    resetFrame();
+    stepAcc += P.pps * SPP * realDt;
+    let n = Math.floor(stepAcc);
+    stepAcc -= n;
+    n = Math.min(n, 60000);
+    for (let i = 0; i < n; i++) step();
+  }
+  updateSchematic(realDt);
+  stepNudge = false;
+  drawScope();
+  labelT += realDt;
+  if (labelT > 0.1 || P.pps <= 4 || P.paused) { labelT = 0; updateReadouts(); }
+  requestAnimationFrame(frame);
+}
+
+// ---------------------------------------------------------------- boot
+syncUI();
+drawSchematic();
+$('ex-title').textContent = TOPO[P.topo].title;
+$('ex-body').innerHTML = EXPLAIN[P.topo];
+settle();
+resize();
+requestAnimationFrame(frame);
+
+// test hook
+window.__smps = { P, S, stats, step, settle, coldStart, idealVout };
+})();
+</script>
+</body>
+</html>

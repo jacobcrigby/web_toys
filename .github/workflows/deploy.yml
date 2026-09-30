@@ -49,6 +49,7 @@ jobs:
           cp -r battleship/dist dist/battleship
           cp -r opensauce dist/opensauce
           cp -r daylight-map/dist dist/daylight-map
+          cp -r switch-mode dist/switch-mode
 
       - uses: actions/configure-pages@v4
 
