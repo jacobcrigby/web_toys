@@ -3,15 +3,9 @@
 import type { Dataset } from '../data/dataset.ts';
 import type { ManufacturerId } from '../data/types.ts';
 import { summarize, summarizeManufacturer } from '../quiz/progress.ts';
-import type { Box, Progress } from '../quiz/types.ts';
+import type { Progress } from '../quiz/types.ts';
 import { h } from './dom.ts';
-
-const pips = (box: Box): HTMLElement =>
-  h(
-    'span',
-    { class: 'pips', 'aria-label': `Box ${box} of 5` },
-    ...[1, 2, 3, 4, 5].map((n) => h('span', { class: 'pip', 'data-on': n <= box })),
-  );
+import { pips } from './pips.ts';
 
 const percent = (value: number): string => `${Math.round(value * 100)}%`;
 
@@ -109,6 +103,13 @@ export function createStatsView(
         : `${overall.seen} answered · ${percent(overall.accuracy)} unaided · streak ${progress.streak} · best ${progress.bestStreak}`,
     ),
     table,
+    h(
+      'p',
+      { class: 'stats__legend' },
+      'Mastery is a Leitner box from 1 to 5. Naming a maker unaided moves it up a box, a miss ' +
+        'drops it back to 1, and makers in low boxes come round more often. Hinted answers ' +
+        'count as seen but hold the box.',
+    ),
     h('h2', {}, 'What you mix up'),
     confusion,
     h('p', { class: 'stats__reset' }, reset),

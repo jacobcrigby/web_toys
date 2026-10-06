@@ -58,7 +58,13 @@ describe('applyOutcome', () => {
     expect(entry.seen).toBe(1);
     expect(entry.correct).toBe(1);
     expect(entry.hinted).toBe(1);
+    expect(entry.unaided).toBe(0);
     expect(entry.box).toBe(1); // held, not promoted
+  });
+
+  it('counts an unaided correct answer towards unaided', () => {
+    const { question, next } = answer(emptyProgress(), 6, 'correct');
+    expect(next.byManufacturer[question.answer].unaided).toBe(1);
   });
 });
 
@@ -89,7 +95,13 @@ describe('recentCoasters', () => {
 
 describe('summarize', () => {
   it('reports zero accuracy before anything is answered', () => {
-    expect(summarize(emptyProgress())).toEqual({ seen: 0, correct: 0, hinted: 0, accuracy: 0 });
+    expect(summarize(emptyProgress())).toEqual({
+      seen: 0,
+      correct: 0,
+      hinted: 0,
+      unaided: 0,
+      accuracy: 0,
+    });
   });
 
   it('excludes hinted answers from accuracy but not from the totals', () => {
@@ -101,6 +113,17 @@ describe('summarize', () => {
     expect(summary.seen).toBe(2);
     expect(summary.correct).toBe(2);
     expect(summary.hinted).toBe(1);
+    expect(summary.unaided).toBe(1);
     expect(summary.accuracy).toBe(0.5);
+  });
+
+  it('does not let a hinted wrong answer drag down unaided accuracy', () => {
+    // Regression: `correct - hinted` subtracted a hinted miss from the correct count, so this
+    // sequence used to report 0% instead of 50%.
+    let progress = emptyProgress();
+    progress = answer(progress, 41, 'wrong', true).next;
+    progress = answer(progress, 42, 'correct').next;
+
+    expect(summarize(progress).accuracy).toBe(0.5);
   });
 });

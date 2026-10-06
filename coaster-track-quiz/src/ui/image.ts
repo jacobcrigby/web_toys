@@ -11,6 +11,13 @@ import { clear, h, link } from './dom.ts';
 /** Wikimedia thumbs sometimes stall rather than erroring. Give up and offer a retry. */
 const WATCHDOG_MS = 10_000;
 
+/**
+ * Commons answers a burst of requests with a 429 that clears almost immediately, so the first
+ * failure is retried once, silently, before the learner is shown an error at all.
+ */
+const AUTO_RETRY_DELAY_MS = 1_500;
+const AUTO_RETRIES = 1;
+
 export interface TrackImageHandle {
   readonly el: HTMLElement;
   /** Point the panel at an image. `revealed` controls how much attribution is shown. */
@@ -37,6 +44,9 @@ export function createTrackImage(options: TrackImageOptions = {}): TrackImageHan
   // Guards against a late load/error from an image we have already navigated away from.
   let token = 0;
   let watchdog: ReturnType<typeof setTimeout> | undefined;
+  let retryTimer: ReturnType<typeof setTimeout> | undefined;
+  /** Silent retries spent on the current source. Reset whenever the source changes. */
+  let autoRetries = 0;
 
   const setState = (state: 'loading' | 'ready' | 'error') => {
     el.setAttribute('data-state', state);
@@ -47,6 +57,27 @@ export function createTrackImage(options: TrackImageOptions = {}): TrackImageHan
     watchdog = undefined;
   };
 
+  const stopRetry = () => {
+    if (retryTimer !== undefined) clearTimeout(retryTimer);
+    retryTimer = undefined;
+  };
+
+  /** A load failed or stalled: retry once on our own, otherwise show the error panel. */
+  const failed = () => {
+    stopWatchdog();
+    if (current && autoRetries < AUTO_RETRIES) {
+      autoRetries += 1;
+      const source = current;
+      const mine = token;
+      retryTimer = setTimeout(() => {
+        retryTimer = undefined;
+        if (mine === token) load(source);
+      }, AUTO_RETRY_DELAY_MS);
+      return;
+    }
+    setState('error');
+  };
+
   img.addEventListener('load', () => {
     if (Number(img.dataset.token) !== token) return;
     stopWatchdog();
@@ -55,8 +86,7 @@ export function createTrackImage(options: TrackImageOptions = {}): TrackImageHan
 
   img.addEventListener('error', () => {
     if (Number(img.dataset.token) !== token) return;
-    stopWatchdog();
-    setState('error');
+    failed();
   });
 
   const renderError = () => {
@@ -104,6 +134,7 @@ export function createTrackImage(options: TrackImageOptions = {}): TrackImageHan
   const load = (image: CoasterImage) => {
     token += 1;
     stopWatchdog();
+    stopRetry();
     setState('loading');
 
     img.dataset.token = String(token);
@@ -118,7 +149,7 @@ export function createTrackImage(options: TrackImageOptions = {}): TrackImageHan
     renderError();
     const mine = token;
     watchdog = setTimeout(() => {
-      if (mine === token && el.getAttribute('data-state') === 'loading') setState('error');
+      if (mine === token && el.getAttribute('data-state') === 'loading') failed();
     }, WATCHDOG_MS);
   };
 
@@ -126,6 +157,7 @@ export function createTrackImage(options: TrackImageOptions = {}): TrackImageHan
     el,
     setSource(image, opts = {}) {
       current = image;
+      autoRetries = 0;
       revealed = opts.revealed ?? false;
       renderCredit(image);
       load(image);
@@ -138,6 +170,9 @@ export function createTrackImage(options: TrackImageOptions = {}): TrackImageHan
     },
     destroy() {
       stopWatchdog();
+      stopRetry();
+      // Bump the token so the error event this fires is ignored, like any other stale event.
+      token += 1;
       img.src = '';
     },
   };

@@ -19,6 +19,13 @@ a {
   color: var(--steel);
 }
 
+/* Components like .hint set their own `display`, which beats the UA's [hidden] rule. Repeating
+   the attribute lifts this to two-attribute specificity, above any single class, without
+   resorting to !important. */
+[hidden][hidden] {
+  display: none;
+}
+
 :focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
@@ -125,12 +132,46 @@ a {
   background: transparent;
 }
 
+.key {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 5px;
+  border: 1px solid var(--line-strong);
+  border-bottom-width: 2px;
+  background: var(--panel-2);
+  color: var(--muted);
+  font: inherit;
+  font-size: 11px;
+  line-height: 1;
+}
+
+.button--primary .key {
+  background: rgba(0, 0, 0, 0.18);
+  border-color: rgba(0, 0, 0, 0.25);
+  color: inherit;
+}
+
+.button .key {
+  margin-left: var(--space-2);
+}
+
+/* Touch screens have no keys to press. */
+@media (hover: none) and (pointer: coarse) {
+  .key {
+    display: none;
+  }
+}
+
 /* ---------------------------------------------------------------- quiz */
 
 .prompt {
   font-size: 19px;
   font-weight: 600;
   margin: 0 0 var(--space-4);
+  outline: none;
 }
 
 .quiz__controls {
@@ -205,16 +246,55 @@ a {
   opacity: 0.4;
 }
 
+.quiz__aids {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
 .hint {
   display: inline-flex;
-  align-items: baseline;
+  align-items: center;
   gap: var(--space-2);
-  margin-top: var(--space-3);
+}
+
+.hint .key {
+  margin-left: 0;
 }
 
 .hint__cost {
   color: var(--faint);
   font-size: 12px;
+}
+
+.shot-toggle {
+  display: inline-flex;
+  padding: 3px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line-strong);
+  background: var(--panel);
+}
+
+.shot-toggle__option {
+  font: inherit;
+  font-size: 13px;
+  padding: 6px 12px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.shot-toggle__option:hover {
+  color: var(--text);
+}
+
+.shot-toggle__option[aria-pressed="true"] {
+  background: var(--steel-dim);
+  color: var(--steel);
 }
 
 .quiz__footer {
@@ -348,6 +428,12 @@ a {
   color: var(--wrong);
 }
 
+/* Focused programmatically when the panel appears; a quiet ring is enough for a heading. */
+.reveal__heading:focus-visible {
+  outline-color: var(--line-strong);
+  outline-offset: 6px;
+}
+
 .reveal[data-correct="true"] .reveal__heading {
   color: var(--correct);
 }
@@ -389,9 +475,14 @@ a {
   color: var(--muted);
 }
 
+.reveal__supporting li {
+  display: grid;
+  grid-template-columns: 82px 1fr;
+  column-gap: var(--space-2);
+  align-items: baseline;
+}
+
 .reveal__aspect {
-  display: inline-block;
-  min-width: 82px;
   color: var(--faint);
   font-size: 11px;
   text-transform: uppercase;
@@ -460,10 +551,37 @@ a {
   font-size: 14px;
 }
 
-.reveal__hint-flag {
-  margin: var(--space-4) 0 0;
+.reveal__mastery {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-5) 0 0;
   font-size: 13px;
+  color: var(--muted);
+}
+
+.reveal__mastery-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
   color: var(--faint);
+  margin-right: var(--space-1);
+}
+
+.reveal__mastery-arrow {
+  color: var(--faint);
+}
+
+.reveal__mastery-note {
+  flex-basis: 100%;
+}
+
+@media (min-width: 621px) {
+  .reveal__mastery-note {
+    flex-basis: auto;
+    margin-left: var(--space-2);
+  }
 }
 
 /* ---------------------------------------------------------------- guide */
@@ -599,15 +717,39 @@ a {
   margin: 0;
 }
 
+.guide__example-frame {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--radius-sm);
+  background: var(--panel-2);
+  overflow: hidden;
+}
+
 .guide__example img {
   width: 100%;
   /* The intrinsic `height` attribute would otherwise beat `aspect-ratio` and stretch the tile. */
-  height: auto;
-  aspect-ratio: 4 / 3;
+  height: 100%;
   object-fit: cover;
-  border-radius: var(--radius-sm);
-  background: var(--panel-2);
   display: block;
+}
+
+.guide__example-missing {
+  position: absolute;
+  inset: 0;
+  display: none;
+  place-items: center;
+  padding: var(--space-3);
+  text-align: center;
+  color: var(--faint);
+  font-size: 12px;
+}
+
+.guide__example[data-state="error"] img {
+  visibility: hidden;
+}
+
+.guide__example[data-state="error"] .guide__example-missing {
+  display: grid;
 }
 
 .guide__example figcaption {
@@ -633,6 +775,12 @@ a {
 .stats h2 {
   font-size: 17px;
   margin: var(--space-7) 0 var(--space-3);
+}
+
+.stats__legend {
+  margin: var(--space-3) 0 0;
+  color: var(--faint);
+  font-size: 13px;
 }
 
 .stats__table,

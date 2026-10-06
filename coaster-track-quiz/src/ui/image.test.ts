@@ -41,20 +41,80 @@ describe('load states', () => {
     expect(state(handle.el)).toBe('ready');
   });
 
-  it('goes to error when the hotlink fails', () => {
+  it('retries once silently before showing an error', () => {
     const handle = createTrackImage();
     handle.setSource(makeImage());
-    imgOf(handle.el).dispatchEvent(new Event('error'));
+    const img = imgOf(handle.el);
+    const firstSrc = img.src;
+
+    img.dispatchEvent(new Event('error'));
+    expect(state(handle.el)).toBe('loading');
+
+    vi.advanceTimersByTime(2_000);
+    expect(state(handle.el)).toBe('loading');
+    // Re-requested with a fragment, so the browser fetches again rather than replaying a miss.
+    expect(img.src).not.toBe(firstSrc);
+    expect(img.src.startsWith(firstSrc)).toBe(true);
+  });
+
+  it('goes to error when the hotlink fails twice', () => {
+    const handle = createTrackImage();
+    handle.setSource(makeImage());
+    const img = imgOf(handle.el);
+
+    img.dispatchEvent(new Event('error'));
+    vi.advanceTimersByTime(2_000);
+    img.dispatchEvent(new Event('error'));
 
     expect(state(handle.el)).toBe('error');
     expect(handle.el.textContent).toContain('would not load');
   });
 
-  it('gives up on an image that hangs without erroring', () => {
+  it('recovers if the silent retry succeeds', () => {
+    const handle = createTrackImage();
+    handle.setSource(makeImage());
+    const img = imgOf(handle.el);
+
+    img.dispatchEvent(new Event('error'));
+    vi.advanceTimersByTime(2_000);
+    img.dispatchEvent(new Event('load'));
+
+    expect(state(handle.el)).toBe('ready');
+  });
+
+  it('gives up on an image that hangs without erroring, after one more try', () => {
     const handle = createTrackImage();
     handle.setSource(makeImage());
     vi.advanceTimersByTime(10_500);
+    expect(state(handle.el)).toBe('loading');
+    vi.advanceTimersByTime(12_500);
     expect(state(handle.el)).toBe('error');
+  });
+
+  it('gets a fresh silent retry for each new source', () => {
+    const handle = createTrackImage();
+    handle.setSource(makeImage());
+    const img = imgOf(handle.el);
+    img.dispatchEvent(new Event('error'));
+    vi.advanceTimersByTime(2_000);
+    img.dispatchEvent(new Event('error'));
+    expect(state(handle.el)).toBe('error');
+
+    handle.setSource(makeImage({ url: 'https://upload.wikimedia.org/wikipedia/commons/b/B.jpg' }));
+    img.dispatchEvent(new Event('error'));
+    expect(state(handle.el)).toBe('loading');
+  });
+
+  it('does not retry a source it has been pointed away from', () => {
+    const handle = createTrackImage();
+    handle.setSource(makeImage());
+    const img = imgOf(handle.el);
+    img.dispatchEvent(new Event('error'));
+
+    const next = 'https://upload.wikimedia.org/wikipedia/commons/b/B.jpg';
+    handle.setSource(makeImage({ url: next }));
+    vi.advanceTimersByTime(5_000);
+    expect(img.src).toBe(next);
   });
 
   it('does not fire the watchdog once the image has loaded', () => {
@@ -83,6 +143,8 @@ describe('load states', () => {
     const onSkip = vi.fn();
     const handle = createTrackImage({ onSkip });
     handle.setSource(makeImage());
+    imgOf(handle.el).dispatchEvent(new Event('error'));
+    vi.advanceTimersByTime(2_000);
     imgOf(handle.el).dispatchEvent(new Event('error'));
 
     const skip = [...handle.el.querySelectorAll('button')].find((b) =>

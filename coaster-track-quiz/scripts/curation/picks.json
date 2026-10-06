@@ -25,7 +25,10 @@
       "family": "rmc-ibox",
       "closeup": "File:Goliath at Six Flags Great America (14860655336).jpg",
       "context": "File:Goliath at Six Flags Great America (14697112557).jpg",
-      "blindAlt": "A steel inversion carrying the train over a timber support structure"
+      "blindAlt": "A steel inversion carrying the train over a timber support structure",
+      "name": "Goliath",
+      "park": "Six Flags Great America",
+      "opened": 2014
     },
     {
       "id": "outlaw-run",
@@ -43,7 +46,8 @@
       "family": "rmc-ibox",
       "closeup": "File:Zadra (Energylandia) - Zero-G-Stall.jpg",
       "context": "File:Energylandia - Zadra - 26-05-2019.jpg",
-      "blindAlt": "A long steel arc of track rising above heavy timber bents"
+      "blindAlt": "A long steel arc of track rising above heavy timber bents",
+      "opened": 2019
     },
     {
       "id": "wonder-woman-golden-lasso",
@@ -52,7 +56,8 @@
       "family": "rmc-raptor",
       "closeup": "File:WWGLC 2020.jpg",
       "context": "File:Wonder Woman Golden Lasso Coaster 1.jpg",
-      "blindAlt": "A train straddling a single narrow rail above water"
+      "blindAlt": "A train straddling a single narrow rail above water",
+      "opened": 2018
     },
     {
       "id": "railblazer",
@@ -61,7 +66,8 @@
       "family": "rmc-raptor",
       "closeup": "File:RailBlazer 2024-07-16 1.jpg",
       "context": "File:California's Great America - RailBlazer.jpg",
-      "blindAlt": "A single-rail steel track twisting through an inversion"
+      "blindAlt": "A single-rail steel track twisting through an inversion",
+      "opened": 2018
     },
     {
       "id": "twisted-timbers",
@@ -79,7 +85,8 @@
       "family": "gci-wood",
       "closeup": "File:California's Great Adventure - Gold Striker track (4008).jpg",
       "context": "File:California's Great America (14156760970).jpg",
-      "blindAlt": "Densely packed timber bents carrying wooden track overhead"
+      "blindAlt": "Densely packed timber bents carrying wooden track overhead",
+      "opened": 2013
     },
     {
       "id": "roar",
@@ -88,7 +95,10 @@
       "family": "gci-wood",
       "closeup": "File:Six Flags Discovery Kingdom - Roar 2.jpg",
       "context": "File:Six Flags Discovery Kingdom - Roar.jpg",
-      "blindAlt": "A train cresting wooden track inside a timber structure"
+      "blindAlt": "A train cresting wooden track inside a timber structure",
+      "park": "Six Flags Discovery Kingdom",
+      "opened": 1999,
+      "note": "Closed in 2015 and rebuilt by RMC as The Joker, which is also in this quiz. The wooden track photographed here no longer exists."
     },
     {
       "id": "thunderhead",
@@ -97,7 +107,8 @@
       "family": "gci-wood",
       "closeup": "File:Thunderhead (Dollywood) 03.JPG",
       "context": "File:Thunderhead (Dollywood) 02.JPG",
-      "blindAlt": "A train on wooden track weaving through its own timber structure"
+      "blindAlt": "A train on wooden track weaving through its own timber structure",
+      "opened": 2004
     },
     {
       "id": "prowler",
@@ -124,7 +135,8 @@
       "family": "gci-wood",
       "closeup": "File:Renegade 1st Drop.jpg",
       "context": "File:Renegade Drop.jpg",
-      "blindAlt": "A train climbing wooden track supported on timber bents"
+      "blindAlt": "A train climbing wooden track supported on timber bents",
+      "opened": 2007
     },
     {
       "id": "wicker-man",
@@ -133,7 +145,8 @@
       "family": "gci-wood",
       "closeup": "File:Speeding Down The Track (49335183388).jpg",
       "context": "File:The Wicker Man Thunders By (49335644276).jpg",
-      "blindAlt": "A train on wooden track running low through timber supports"
+      "blindAlt": "A train on wooden track running low through timber supports",
+      "opened": 2018
     },
     {
       "id": "wood-coaster-mountain-flyer",
@@ -142,7 +155,10 @@
       "family": "gci-wood",
       "closeup": "File:Knight Valley - 5764345570.jpg",
       "context": "File:Knight Valley - 5764351498.jpg",
-      "blindAlt": "Wooden track and timber bents built into a hillside"
+      "blindAlt": "Wooden track and timber bents built into a hillside",
+      "name": "Wood Coaster",
+      "park": "Knight Valley",
+      "opened": 2011
     },
     {
       "id": "yukon-striker",
@@ -151,7 +167,8 @@
       "family": "bm-box-spine",
       "closeup": "File:Yukon Striker and Vortex at Canada's Wonderland, May 2019.jpg",
       "context": "File:Yukon Striker's lift and drop (31582221588).jpg",
-      "blindAlt": "Looking up at a steel box spine carrying two round rails on flat plates"
+      "blindAlt": "Looking up at a steel box spine carrying two round rails on flat plates",
+      "opened": 2019
     },
     {
       "id": "mako",
@@ -160,7 +177,9 @@
       "family": "bm-box-spine",
       "closeup": "File:Emperor (SeaWorld San Diego) 1.jpg",
       "context": "File:Emperor (SeaWorld San Diego) 3.jpg",
-      "blindAlt": "A deep steel box spine sweeping through a wide banked curve"
+      "blindAlt": "A deep steel box spine sweeping through a wide banked curve",
+      "name": "Emperor",
+      "opened": 2022
     },
     {
       "id": "orion",
@@ -178,15 +197,20 @@
       "family": "bm-inverted",
       "closeup": "File:LZTR (Pre-MCBR Drop) (5).JPG",
       "context": "File:LZTR (Second Loop) (8).JPG",
-      "blindAlt": "A train hanging beneath an overhead steel beam, legs free"
+      "blindAlt": "A train hanging beneath an overhead steel beam, legs free",
+      "name": "Led Zeppelin: The Ride",
+      "park": "Hard Rock Park",
+      "country": "United States",
+      "opened": 2008,
+      "note": "Photographed in 2008 as Led Zeppelin: The Ride at Hard Rock Park, Myrtle Beach. The ride later ran as Time Machine and now operates as Dragon's Run at Ocean Park Ha Long in Vietnam, on the same B&M track throughout."
     },
     {
       "id": "monster-gronalund",
       "rcdbId": "15212",
       "manufacturer": "bolliger-mabillard",
       "family": "bm-box-spine",
-      "closeup": "File:Gr\u00f6na Lund, Monster, febr 2021c.jpg",
-      "context": "File:Gr\u00f6na Lund, Allm\u00e4nna gr\u00e4nd, Stockholm, 20240106 - 08.jpg",
+      "closeup": "File:Gröna Lund, Monster, febr 2021c.jpg",
+      "context": "File:Gröna Lund, Allmänna gränd, Stockholm, 20240106 - 08.jpg",
       "blindAlt": "Steel box-spine track under construction beside a tower crane"
     },
     {
@@ -194,8 +218,8 @@
       "rcdbId": "17349",
       "manufacturer": "bolliger-mabillard",
       "family": "bm-box-spine",
-      "closeup": "File:\u5317\u4eac\u73af\u7403\u5f71\u57ce\u9738\u5929\u864e\u8fc7\u5c71\u8f66 04.jpg",
-      "context": "File:\u5317\u4eac\u73af\u7403\u5f71\u57ce\u9738\u5929\u864e\u8fc7\u5c71\u8f66 03.jpg",
+      "closeup": "File:北京环球影城霸天虎过山车 04.jpg",
+      "context": "File:北京环球影城霸天虎过山车 03.jpg",
       "blindAlt": "A steel spine and its walkway seen close against a pale sky"
     },
     {
@@ -205,7 +229,8 @@
       "family": "bm-box-spine",
       "closeup": "File:Pipeline The Surf Coaster's over-banked turn.jpg",
       "context": "File:Pipeline The Surf Coaster 2.jpg",
-      "blindAlt": "Blue steel track curving through a tight inversion"
+      "blindAlt": "Blue steel track curving through a tight inversion",
+      "opened": 2023
     },
     {
       "id": "wrath-of-rakshasa",
@@ -214,7 +239,8 @@
       "family": "bm-box-spine",
       "closeup": "File:Wrath of Rakshasa holding brake drop.jpg",
       "context": "File:Wrath of Rakshasa exiting dive loop.jpg",
-      "blindAlt": "A train cresting a steep blue steel drop"
+      "blindAlt": "A train cresting a steep blue steel drop",
+      "park": "Six Flags Great America"
     },
     {
       "id": "hyperion",
@@ -230,8 +256,8 @@
       "rcdbId": "16138",
       "manufacturer": "intamin",
       "family": "intamin-box-spine",
-      "closeup": "File:Taiga Linnanm\u00e4ki (20190629) 5.jpg",
-      "context": "File:Taiga Linnanm\u00e4ki (20190629) 3.jpg",
+      "closeup": "File:Taiga Linnanmäki (20190629) 5.jpg",
+      "context": "File:Taiga Linnanmäki (20190629) 3.jpg",
       "blindAlt": "A narrow steel spine passing close overhead against grey cloud"
     },
     {
@@ -250,7 +276,8 @@
       "family": "intamin-box-spine",
       "closeup": "File:-i---i- (48973591393).jpg",
       "context": "File:-i---i- (48974306296).jpg",
-      "blindAlt": "Pale green and orange steel track crossing under a roof structure"
+      "blindAlt": "Pale green and orange steel track crossing under a roof structure",
+      "opened": 2019
     },
     {
       "id": "red-force",
@@ -275,7 +302,7 @@
       "rcdbId": "1043",
       "manufacturer": "vekoma",
       "family": "vekoma-classic",
-      "closeup": "File:Loopen & Enterprise p\u00e5 TusenFryd.JPG",
+      "closeup": "File:Loopen & Enterprise på TusenFryd.JPG",
       "context": "File:Loopen roller coaster Oslo.jpg",
       "blindAlt": "Red steel track looping tightly above a lattice of supports"
     },
@@ -286,7 +313,8 @@
       "family": "vekoma-classic",
       "closeup": "File:Fun Spot America Orlando Freedom Flyer Coaster.JPG",
       "context": "File:Fun Spot America Orlando Freedom Flyer ride 2.jpg",
-      "blindAlt": "Blue and yellow track with the train hanging below the rail"
+      "blindAlt": "Blue and yellow track with the train hanging below the rail",
+      "park": "Fun Spot America Orlando"
     },
     {
       "id": "tron-lightcycle-power-run",
@@ -295,7 +323,8 @@
       "family": "vekoma-modern",
       "closeup": "File:Tron Lightcycles Power Run (29510932862).jpg",
       "context": "File:Tron Lightcycles Power Run (28995514064).jpg",
-      "blindAlt": "A lit launch track running away into a dark enclosure"
+      "blindAlt": "A lit launch track running away into a dark enclosure",
+      "opened": 2016
     },
     {
       "id": "raik",
@@ -304,7 +333,8 @@
       "family": "vekoma-classic",
       "closeup": "File:Raik-1.jpg",
       "context": "File:Raik-3.jpg",
-      "blindAlt": "Grey steel track and lift structure against a rock facade"
+      "blindAlt": "Grey steel track and lift structure against a rock facade",
+      "park": "Phantasialand"
     },
     {
       "id": "jungle-racing",
@@ -340,7 +370,8 @@
       "family": "arrow-tubular",
       "closeup": "File:PKD-Anaconda.jpg",
       "context": "File:Anaconda (Kings Dominion) 3.jpg",
-      "blindAlt": "Red tubular track with flat rungs between the rails, on slim green columns"
+      "blindAlt": "Red tubular track with flat rungs between the rails, on slim green columns",
+      "opened": 1991
     },
     {
       "id": "corkscrew",
@@ -349,7 +380,9 @@
       "family": "arrow-tubular",
       "closeup": "File:Corkscrew (Valleyfair).jpg",
       "context": "File:Corkscrew (Valleyfair) 2016 1.jpg",
-      "blindAlt": "Tubular steel track spiralling tightly around its own axis"
+      "blindAlt": "Tubular steel track spiralling tightly around its own axis",
+      "park": "Valleyfair",
+      "opened": 1980
     },
     {
       "id": "big-bad-wolf",
@@ -358,7 +391,9 @@
       "family": "arrow-tubular",
       "closeup": "File:Big bad wolf last drop.jpeg",
       "context": "File:Big Bad Wolf final drop and track (train at top).jpg",
-      "blindAlt": "Suspended tubular track crossing above water on plain grey columns"
+      "blindAlt": "Suspended tubular track crossing above water on plain grey columns",
+      "park": "Busch Gardens Williamsburg",
+      "opened": 1984
     },
     {
       "id": "adventure-express",
@@ -376,7 +411,10 @@
       "family": "arrow-tubular",
       "closeup": "File:X2 at Six Flags Magic Mountain 08.jpg",
       "context": "File:X2 at Six Flags Magic Mountain 07.jpg",
-      "blindAlt": "Tubular steel track and heavy grey supports seen from directly below"
+      "blindAlt": "Tubular steel track and heavy grey supports seen from directly below",
+      "name": "X2",
+      "opened": 2002,
+      "note": "Opened as X in 2002 and relaunched as X2 in 2008 with new trains. The Arrow track is original."
     },
     {
       "id": "blue-fire-megacoaster",
@@ -410,8 +448,8 @@
       "rcdbId": "1891",
       "manufacturer": "mack-rides",
       "family": "mack-box-spine",
-      "closeup": "File:Europa-Park - Pos\u00e9idon (22).JPG",
-      "context": "File:Europa-Park - Pos\u00e9idon (18).JPG",
+      "closeup": "File:Europa-Park - Poséidon (22).JPG",
+      "context": "File:Europa-Park - Poséidon (18).JPG",
       "blindAlt": "Blue steel track on white tubular legs rising above trees"
     },
     {
@@ -466,7 +504,9 @@
       "family": "gerstlauer-euro-fighter",
       "closeup": "File:Adventureisland047.JPG",
       "context": null,
-      "blindAlt": "Yellow steel track looping above magenta supports"
+      "blindAlt": "Yellow steel track looping above magenta supports",
+      "park": "Adventure Island",
+      "opened": 2007
     },
     {
       "id": "speed-no-limits",
@@ -475,7 +515,9 @@
       "family": "gerstlauer-euro-fighter",
       "closeup": "File:Speed-Oakwood-3.jpg",
       "context": null,
-      "blindAlt": "A train on steel track at the top of a near-vertical lift"
+      "blindAlt": "A train on steel track at the top of a near-vertical lift",
+      "park": "Oakwood Theme Park",
+      "opened": 2006
     },
     {
       "id": "huracan",
@@ -484,7 +526,8 @@
       "family": "gerstlauer-euro-fighter",
       "closeup": "File:Huracan (Belantis) (2).jpg",
       "context": "File:2016 WGT 003 Belantis.jpg",
-      "blindAlt": "A vertical steel lift structure silhouetted against the sun"
+      "blindAlt": "A vertical steel lift structure silhouetted against the sun",
+      "opened": 2010
     },
     {
       "id": "dare-devil-dive",
@@ -493,7 +536,9 @@
       "family": "gerstlauer-euro-fighter",
       "closeup": "File:Dare Devil Dive at Six Flags Over Georgia.jpg",
       "context": "File:Dare Devil Dive (Six Flags Over Georgia) 2.jpg",
-      "blindAlt": "Red steel track and yellow supports packed into a small footprint"
+      "blindAlt": "Red steel track and yellow supports packed into a small footprint",
+      "park": "Six Flags Over Georgia",
+      "opened": 2011
     },
     {
       "id": "spongebob-squarepants-rock-bottom-plunge",
@@ -502,7 +547,8 @@
       "family": "gerstlauer-euro-fighter",
       "closeup": "File:Mall of America 21 - theme park.jpg",
       "context": "File:Mall of America 03 - theme park.jpg",
-      "blindAlt": "Green steel track looping tightly under a glass roof"
+      "blindAlt": "Green steel track looping tightly under a glass roof",
+      "opened": 2008
     }
   ]
 }

@@ -15,7 +15,7 @@ import type {
 export const RECENT_COASTER_LIMIT = 24;
 
 export function emptyManufacturerProgress(): ManufacturerProgress {
-  return { box: 1, seen: 0, correct: 0, hinted: 0, lastAskedAt: -Infinity };
+  return { box: 1, seen: 0, correct: 0, hinted: 0, unaided: 0, lastAskedAt: -Infinity };
 }
 
 export function emptyProgress(): Progress {
@@ -52,6 +52,7 @@ export function applyOutcome(progress: Progress, question: Question, verdict: Ve
     seen: before.seen + 1,
     correct: before.correct + (verdict.correct ? 1 : 0),
     hinted: before.hinted + (verdict.hintUsed ? 1 : 0),
+    unaided: before.unaided + (verdict.correct && !verdict.hintUsed ? 1 : 0),
     lastAskedAt: askedCount,
   };
 
@@ -78,12 +79,13 @@ export function applyOutcome(progress: Progress, question: Question, verdict: Ve
 
 /**
  * Accuracy is reported *unaided*: a correct answer that leaned on the hint still counts as seen
- * and correct, but is subtracted from the numerator here. Otherwise the number would flatter.
+ * and correct, but not towards accuracy. Otherwise the number would flatter.
  */
 export function summarize(progress: Progress): ProgressSummary {
   let seen = 0;
   let correct = 0;
   let hinted = 0;
+  let unaided = 0;
 
   for (const id of MANUFACTURER_IDS) {
     const entry = progress.byManufacturer[id];
@@ -91,18 +93,18 @@ export function summarize(progress: Progress): ProgressSummary {
     seen += entry.seen;
     correct += entry.correct;
     hinted += entry.hinted;
+    unaided += entry.unaided;
   }
 
-  const unaided = Math.max(0, correct - hinted);
-  return { seen, correct, hinted, accuracy: seen === 0 ? 0 : unaided / seen };
+  return { seen, correct, hinted, unaided, accuracy: seen === 0 ? 0 : unaided / seen };
 }
 
 export function summarizeManufacturer(entry: ManufacturerProgress): ProgressSummary {
-  const unaided = Math.max(0, entry.correct - entry.hinted);
   return {
     seen: entry.seen,
     correct: entry.correct,
     hinted: entry.hinted,
-    accuracy: entry.seen === 0 ? 0 : unaided / entry.seen,
+    unaided: entry.unaided,
+    accuracy: entry.seen === 0 ? 0 : entry.unaided / entry.seen,
   };
 }

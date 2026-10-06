@@ -43,11 +43,16 @@ function repairManufacturers(raw: unknown): Record<ManufacturerId, ManufacturerP
     }
 
     const lastAskedAt = entry.lastAskedAt;
+    const correct = finiteOr(entry.correct, 0);
+    const hinted = finiteOr(entry.hinted, 0);
     result[id] = {
       box: clampBox(entry.box),
       seen: finiteOr(entry.seen, 0),
-      correct: finiteOr(entry.correct, 0),
-      hinted: finiteOr(entry.hinted, 0),
+      correct,
+      hinted,
+      // Records written before `unaided` existed get the old estimate, which is exact unless a
+      // hinted answer was also wrong. Never more than `correct`, whatever was stored.
+      unaided: Math.min(correct, finiteOr(entry.unaided, Math.max(0, correct - hinted))),
       lastAskedAt: typeof lastAskedAt === 'number' ? lastAskedAt : -Infinity,
     };
   }

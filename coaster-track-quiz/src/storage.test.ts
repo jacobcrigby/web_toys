@@ -127,7 +127,7 @@ describe('field-level repair', () => {
         ...emptyProgress(),
         byManufacturer: {
           ...emptyProgress().byManufacturer,
-          gci: { box: 4, seen: 6, correct: 5, hinted: 1, lastAskedAt: 6 },
+          gci: { box: 4, seen: 6, correct: 5, hinted: 1, unaided: 4, lastAskedAt: 6 },
         },
       }),
     );
@@ -136,8 +136,37 @@ describe('field-level repair', () => {
       seen: 6,
       correct: 5,
       hinted: 1,
+      unaided: 4,
       lastAskedAt: 6,
     });
+  });
+
+  it('estimates unaided for a record saved before the field existed', () => {
+    store.setItem(
+      KEY,
+      JSON.stringify({
+        ...emptyProgress(),
+        byManufacturer: {
+          ...emptyProgress().byManufacturer,
+          gci: { box: 3, seen: 6, correct: 5, hinted: 2, lastAskedAt: 6 },
+        },
+      }),
+    );
+    expect(loadProgress().byManufacturer.gci.unaided).toBe(3);
+  });
+
+  it('never restores more unaided answers than correct ones', () => {
+    store.setItem(
+      KEY,
+      JSON.stringify({
+        ...emptyProgress(),
+        byManufacturer: {
+          ...emptyProgress().byManufacturer,
+          gci: { box: 3, seen: 6, correct: 2, hinted: 0, unaided: 9, lastAskedAt: 6 },
+        },
+      }),
+    );
+    expect(loadProgress().byManufacturer.gci.unaided).toBe(2);
   });
 
   it('restores lastAskedAt for an entry JSON turned into null', () => {

@@ -9,22 +9,32 @@ import { h, link } from './dom.ts';
 
 function exampleFigure(coaster: Coaster): HTMLElement {
   const image = coaster.closeup;
-  return h(
+  const img = h('img', {
+    src: image.url,
+    alt: image.attribution.description || image.blindAlt,
+    loading: 'lazy',
+    decoding: 'async',
+    width: image.width,
+    height: image.height,
+  });
+  const figure = h(
     'figure',
     { class: 'guide__example' },
-    h('img', {
-      src: image.url,
-      alt: image.attribution.description || image.blindAlt,
-      loading: 'lazy',
-      decoding: 'async',
-      width: image.width,
-      height: image.height,
-    }),
+    h(
+      'div',
+      { class: 'guide__example-frame' },
+      img,
+      h('span', { class: 'guide__example-missing' }, 'Photo unavailable from Wikimedia'),
+    ),
     h(
       'figcaption',
       {},
       // Nothing is hidden here — the guide is for studying, not for testing.
-      h('span', { class: 'guide__example-name' }, `${coaster.name}, ${coaster.park}`),
+      h(
+        'span',
+        { class: 'guide__example-name' },
+        [coaster.name, coaster.park].filter(Boolean).join(', '),
+      ),
       // The credit has to stay one inline run: figcaption is a flex column, so a bare
       // separator element would land on a line of its own.
       h(
@@ -37,6 +47,11 @@ function exampleFigure(coaster: Coaster): HTMLElement {
       ),
     ),
   );
+
+  // Hotlinks rot and Commons rate-limits. A broken-image icon over alt text looks like a bug;
+  // a labelled placeholder does not.
+  img.addEventListener('error', () => figure.setAttribute('data-state', 'error'));
+  return figure;
 }
 
 function familySection(dataset: Dataset, family: TrackFamily): HTMLElement {

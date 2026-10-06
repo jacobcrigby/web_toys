@@ -65,7 +65,7 @@ src/
     select.ts    target and coaster choice   decoys.ts    pedagogically weighted wrong answers
     generate.ts  Question + look-ahead queue grade.ts     Verdict, contrasts, decoy explanations
   ui/
-    dom.ts  render.ts  quiz.ts  reveal.ts  image.ts  guide.ts  stats.ts
+    dom.ts  render.ts  quiz.ts  reveal.ts  image.ts  guide.ts  stats.ts  pips.ts
   testing/fixtures.ts   synthetic dataset for the engine tests (never imported by the app)
 scripts/                plain .mjs Node curation tooling — committed, outside tsconfig
 ```
@@ -93,6 +93,9 @@ and the reference can never drift.
 - Tests co-locate as `src/**/*.test.ts`.
 - Generated = facts, URLs, attribution. Hand-written = pedagogy (`manufacturers.ts`,
   `track-families.ts`, `blindAlt`, `note`). Re-running the emitter never clobbers prose.
+- A pick in `picks.json` may pin `name`, `park`, `country` or `opened` when Wikidata is wrong
+  or silent; the pin always beats the fetched fact. The emitter warns about every gap it had
+  to leave, so a clean `pnpm data:emit` run means no reveal will show a missing park or year.
 
 ## Deliberate deviations from the monorepo conventions
 
@@ -129,6 +132,20 @@ and the reference can never drift.
 - **Image URLs must contain no `?`.** `dataset.test.ts` enforces it, and `ui/image.ts` relies on
   it: a retry cache-busts with a `#` fragment. The Commons API appends `utm_*` params to every
   URL it returns, so the emitter strips them.
+- **Thumbnails stay on `upload.wikimedia.org`.** The Commons API now returns thumbnail URLs on
+  `thumb.wikimedia.org`. The old host serves the identical path, `dataset.test.ts` pins it, and
+  `index.html` preconnects to it, so the emitter rewrites the host rather than churning every
+  URL in the dataset. If `upload.wikimedia.org` ever stops serving thumbs, change all three.
+- **Wikidata coaster items are inconsistently modelled.** The park may be `location` (P276) or
+  `part of` (P361), and P276 is often a *city*; the opening date may be P1619, P571 or P580;
+  relocated rides carry two parks and two countries; labels go stale (RCDB 17030 is still
+  labelled by its working title "Mako", but opened as Emperor). The emitter prefers candidates
+  typed as an amusement park, reduces multi-valued fields deterministically, and warns — fix the
+  rest with a pin in `picks.json`, never by editing the generated file.
+- **`ui/image.ts` retries once silently.** Commons answers a burst with a 429 that clears in a
+  second or two, so the first failure of each source is retried after 1.5 s before any error
+  UI appears. The tests advance fake timers past that window; a new "it errors" test has to
+  fail twice.
 - **Never `innerHTML` anything from Commons.** `extmetadata.Artist` is an HTML fragment;
   `sanitizeArtist` reduces it to text and `ui/dom.ts` only ever sets `textContent`.
 - **Curation cannot be automated, and filename search does not work.** Searching

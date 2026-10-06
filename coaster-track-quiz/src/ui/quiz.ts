@@ -29,39 +29,85 @@ export interface QuizView {
   destroy(): void;
 }
 
+/** Which of the two photos is on screen. Purely presentational, so it lives in the view. */
+type Shot = 'closeup' | 'context';
+
+const kbd = (key: string): HTMLElement => h('kbd', { class: 'key', 'aria-hidden': 'true' }, key);
+
 export function createQuizView(dataset: Dataset, actions: QuizActions): QuizView {
   const image = createTrackImage({ onSkip: () => actions.skipCoaster() });
   const options = h('div', { class: 'options', role: 'group', 'aria-label': 'Who built this?' });
+
   const hintButton = h(
     'button',
-    { type: 'button', class: 'button button--ghost hint' },
+    { type: 'button', class: 'button button--ghost hint', 'aria-keyshortcuts': 'h' },
     h('span', {}, 'Show the whole ride'),
+    kbd('H'),
     h('span', { class: 'hint__cost' }, 'counts as a hint'),
   );
+
+  // Once the hint is spent the learner can flip between the two photos freely; the cost has
+  // already been paid, and comparing the two is where the learning happens.
+  const shotButtons: Record<Shot, HTMLButtonElement> = {
+    closeup: h('button', { type: 'button', class: 'shot-toggle__option' }, 'Track close-up'),
+    context: h('button', { type: 'button', class: 'shot-toggle__option' }, 'Whole ride'),
+  };
+  const shotToggle = h(
+    'div',
+    { class: 'shot-toggle', role: 'group', 'aria-label': 'Which photo to show', hidden: true },
+    shotButtons.closeup,
+    shotButtons.context,
+  );
+
   const revealSlot = h('div', { class: 'reveal-slot', 'aria-live': 'polite' });
-  const nextButton = h('button', { type: 'button', class: 'button button--primary' }, 'Next track');
+  const nextButton = h(
+    'button',
+    { type: 'button', class: 'button button--primary', 'aria-keyshortcuts': 'Enter' },
+    'Next track',
+    kbd('↵'),
+  );
   const scoreLine = h('p', { class: 'scoreline' });
-  const prompt = h('h1', { class: 'prompt' }, 'Who built this track?');
+  const prompt = h('h1', { class: 'prompt', tabindex: '-1' }, 'Who built this track?');
 
   const el = h(
     'section',
     { class: 'quiz' },
     prompt,
     image.el,
-    h('div', { class: 'quiz__controls' }, options, hintButton),
+    h(
+      'div',
+      { class: 'quiz__controls' },
+      options,
+      h('div', { class: 'quiz__aids' }, hintButton, shotToggle),
+    ),
     revealSlot,
     h('div', { class: 'quiz__footer' }, scoreLine, nextButton),
   );
 
-  hintButton.addEventListener('click', () => actions.useHint());
-  nextButton.addEventListener('click', () => actions.next());
-
   let current: QuizViewState | null = null;
+  let shot: Shot = 'closeup';
   let buttons = new Map<ManufacturerId, HTMLButtonElement>();
 
-  // Number keys pick an option; Enter or space moves on. Keeps the drill fast.
-  const onKeyDown = (event: KeyboardEvent) => {
+  function showShot(next: Shot) {
     if (!current) return;
+    const source = next === 'context' ? current.question.coaster.context : null;
+    shot = source ? next : 'closeup';
+    image.setSource(source ?? current.question.coaster.closeup, {
+      revealed: current.verdict !== null,
+    });
+    for (const [name, button] of Object.entries(shotButtons) as [Shot, HTMLButtonElement][]) {
+      button.setAttribute('aria-pressed', String(name === shot));
+    }
+  }
+
+  hintButton.addEventListener('click', () => actions.useHint());
+  nextButton.addEventListener('click', () => actions.next());
+  shotButtons.closeup.addEventListener('click', () => showShot('closeup'));
+  shotButtons.context.addEventListener('click', () => showShot('context'));
+
+  // Number keys pick an option; Enter or space moves on; H asks for the hint. Keeps the drill fast.
+  const onKeyDown = (event: KeyboardEvent) => {
+    if (!current || event.altKey || event.ctrlKey || event.metaKey) return;
     const target = event.target as HTMLElement | null;
     if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) return;
 
@@ -85,9 +131,8 @@ export function createQuizView(dataset: Dataset, actions: QuizActions): QuizView
   };
   document.addEventListener('keydown', onKeyDown);
 
-  function renderOptions(state: QuizViewState) {
-    const sameQuestion = current?.question.id === state.question.id;
-    if (!sameQuestion) {
+  function renderOptions(state: QuizViewState, newQuestion: boolean) {
+    if (newQuestion) {
       options.replaceChildren();
       buttons = new Map();
 
@@ -96,7 +141,7 @@ export function createQuizView(dataset: Dataset, actions: QuizActions): QuizView
         const button = h(
           'button',
           { type: 'button', class: 'option' },
-          h('span', { class: 'option__key' }, String(index + 1)),
+          h('span', { class: 'option__key', 'aria-hidden': 'true' }, String(index + 1)),
           h('span', { class: 'option__name' }, manufacturer.name),
         );
         button.addEventListener('click', () => actions.answer(id));
@@ -122,17 +167,22 @@ export function createQuizView(dataset: Dataset, actions: QuizActions): QuizView
     el,
     update(state) {
       const newQuestion = current?.question.id !== state.question.id;
+      const hintJustUsed = state.hintUsed && !current?.hintUsed;
+      const previous = current;
+      current = state;
 
       if (newQuestion) {
+        shot = 'closeup';
         image.setSource(state.question.coaster.closeup);
-      } else if (state.hintUsed && !current?.hintUsed && state.question.coaster.context) {
-        image.setSource(state.question.coaster.context);
+      } else if (hintJustUsed) {
+        showShot('context');
       }
 
-      renderOptions(state);
+      renderOptions(state, newQuestion);
 
-      hintButton.hidden = !state.question.canHint;
-      hintButton.disabled = state.hintUsed || state.verdict !== null;
+      hintButton.hidden = !state.question.canHint || state.hintUsed;
+      hintButton.disabled = state.verdict !== null;
+      shotToggle.hidden = !state.hintUsed;
 
       revealSlot.replaceChildren();
       if (state.verdict) {
@@ -140,6 +190,11 @@ export function createQuizView(dataset: Dataset, actions: QuizActions): QuizView
         const panel = renderReveal(dataset, state.question.coaster, state.verdict);
         revealSlot.appendChild(panel);
         panel.querySelector<HTMLElement>('.reveal__heading')?.focus();
+      } else if (newQuestion && previous) {
+        // Moving on removes the focused reveal heading from the document, which would dump a
+        // keyboard user back at the top of the page. Land on the prompt instead.
+        const active = document.activeElement;
+        if (!active || active === document.body || !document.contains(active)) prompt.focus();
       }
 
       nextButton.hidden = state.verdict === null;
@@ -149,8 +204,6 @@ export function createQuizView(dataset: Dataset, actions: QuizActions): QuizView
         summary.seen === 0
           ? 'No answers yet'
           : `${summary.seen} seen · ${Math.round(summary.accuracy * 100)}% unaided · streak ${state.progress.streak}`;
-
-      current = state;
     },
     destroy() {
       document.removeEventListener('keydown', onKeyDown);

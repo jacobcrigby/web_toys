@@ -9,7 +9,13 @@ export interface ManufacturerProgress {
   readonly box: Box;
   readonly seen: number;
   readonly correct: number;
+  /** Questions where the whole-ride hint was used, whether or not the answer was then right. */
   readonly hinted: number;
+  /**
+   * Correct answers given without the hint. Tracked separately because `correct - hinted` is
+   * wrong whenever a hinted answer was *also* wrong: that question would be subtracted twice.
+   */
+  readonly unaided: number;
   /**
    * The value of `askedCount` when this manufacturer last came up — an ordinal counter, not a
    * timestamp. Sessions are short and bursty, so spacing by question number is the right model,
@@ -66,6 +72,7 @@ export interface ProgressSummary {
   readonly seen: number;
   readonly correct: number;
   readonly hinted: number;
-  /** Unaided: hinted-correct answers are excluded from the numerator. */
+  readonly unaided: number;
+  /** `unaided / seen`: a correct answer that leaned on the hint does not count. */
   readonly accuracy: number;
 }
