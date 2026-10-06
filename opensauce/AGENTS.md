@@ -1,5 +1,10 @@
 # AGENTS.md — opensauce
 
+> **Archived (October 2026).** Open Sauce 2026 is over. This project is no longer listed on the
+> landing pages (`web_toys/index.html` and the `jacobcrigby.github.io` home page), but it is still
+> deployed at its original URL so existing links keep working. Don't add features or refresh the
+> schedule data; only fix something if it's outright broken.
+
 ## What this is
 
 A personal **schedule planner for Open Sauce 2026** (the maker/creator convention). It shows the full agenda — every session with its time and stage, sorted by time within each day — and lets the visitor star the sessions they plan to attend, filter by featured creator / day / stage, search, and export their picks to a `.ics` calendar file.

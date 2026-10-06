@@ -22,11 +22,13 @@ web_toys/
   battleship/                 # Vite + TypeScript game (see its AGENTS.md)
   daylight-map/               # Vite + TypeScript + Leaflet map (see its AGENTS.md)
   microcosm/                  # Static HTML simulation — no build step, no package.json
-  opensauce/                  # Static HTML schedule planner — no build step, no package.json
+  opensauce/                  # ARCHIVED static HTML schedule planner — deployed but unlisted; no build step, no package.json
   switch-mode/                # Static HTML switch-mode converter visualization — no build step, no package.json
 ```
 
 `microcosm`, `opensauce` and `switch-mode` are deliberately not pnpm workspaces — each is a single self-contained HTML file and ships as-is.
+
+**Archived projects:** `opensauce` (Open Sauce 2026 is over). It still deploys at its URL so old links work, but it is not linked from the landing page. Don't add archived projects back to `index.html`.
 
 ## Package manager: pnpm workspaces
 
@@ -59,7 +61,7 @@ GitHub Actions (`.github/workflows/deploy.yml`) runs on every push to `main`:
    - `dist/pdf-to-cbz/` ← from `pdf-to-cbz/dist/`
    - `dist/marblegame/` ← from `marblegame/dist/`
    - `dist/battleship/` ← from `battleship/dist/`
-   - `dist/opensauce/` ← copied as-is
+   - `dist/opensauce/` ← copied as-is (archived; unlisted)
    - `dist/daylight-map/` ← from `daylight-map/dist/`
    - `dist/switch-mode/` ← copied as-is
 4. Deploys `dist/` to GitHub Pages
@@ -98,5 +100,5 @@ Read the project's own `AGENTS.md` — it contains the architecture, commands, c
 | battleship | `battleship/AGENTS.md` |
 | daylight-map | `daylight-map/AGENTS.md` |
 | microcosm | `microcosm/AGENTS.md` |
-| opensauce | `opensauce/AGENTS.md` |
+| opensauce (archived) | `opensauce/AGENTS.md` |
 | switch-mode | `switch-mode/AGENTS.md` |
